@@ -1,47 +1,138 @@
 <body>
-  <header>
-    <h1>RSVP Admin Page</h1>
-  </header>
-  <div class="rsvp-list">
-    <h2 id="rsvpCount">Total RSVPs: 0</h2>
-    <!-- Added RSVP count -->
-    <ul id="rsvpList">
-      <!-- RSVPs will be dynamically loaded here -->
-    </ul>
+  <div class="container">
+    <!-- Existing content of admin.html wrapped inside the container -->
+    <header>
+      <h1>RSVP Admin Page</h1>
+    </header>
+    <div class="rsvp-list">
+      <h2 id="rsvpCount">RSVPs (0)</h2>
+      <!-- Added RSVP count -->
+      <ul id="rsvpList">
+        <!-- RSVPs will be dynamically loaded here -->
+      </ul>
+    </div>
   </div>
-  <script>
-    // Fetch RSVPs from localStorage and display them
-    const rsvpList = document.getElementById("rsvpList");
-    let rsvps = JSON.parse(localStorage.getItem("rsvps")) || [];
+  <style>
+    @font-face {
+      font-family: "NB Akademie";
+      src: url("fonts/NB Akademie Mono Std.ttf") format("truetype");
+      font-weight: normal;
+      font-style: normal;
+    }
 
-    function renderRSVPs() {
+    body {
+      font-family: "NB Akademie", sans-serif;
+      background: #ffe8e8;
+      color: #333;
+      overflow-x: hidden;
+      letter-spacing: -0.5px;
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    h2 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+
+    ul {
+      font-size: 2.5rem;
+      line-height: 1.6;
+      color: #555;
+    }
+
+    button {
+      font-size: 1.2rem;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-family: "NB Akademie", sans-serif;
+      background: #ff4081;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #e91e63;
+    }
+
+    .container {
+      max-width: full;
+      margin: 20px 20px; /* Center the container horizontally */
+      padding: 10px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      onValue,
+      remove,
+    } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC46z3cPIfPwWUcosOxrlatfAXy4uPYP44",
+      authDomain: "fishing-78a3f.firebaseapp.com",
+      databaseURL: "https://fishing-78a3f-default-rtdb.firebaseio.com",
+      projectId: "fishing-78a3f",
+      storageBucket: "fishing-78a3f.firebasestorage.app",
+      messagingSenderId: "185725420885",
+      appId: "1:185725420885:web:3ec54353344409374d5bdc",
+      measurementId: "G-85WWR1QV6B",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    const rsvpList = document.getElementById("rsvpList");
+
+    function renderRSVPs(rsvps) {
       const rsvpCount = document.getElementById("rsvpCount");
       rsvpList.innerHTML = "";
-      const totalHeadcount = rsvps.reduce((count, rsvp) => {
+      const totalHeadcount = Object.values(rsvps).reduce((count, rsvp) => {
         return count + (rsvp.plusOne === "Yes" ? 2 : 1);
       }, 0);
-      rsvpCount.textContent = `RSVPs (${totalHeadcount})`; // Update RSVP count to include plus ones
+      rsvpCount.textContent = `RSVPs (${totalHeadcount})`;
 
-      rsvps.forEach((rsvp, index) => {
+      Object.entries(rsvps).forEach(([id, rsvp]) => {
         const listItem = document.createElement("li");
-        listItem.textContent = `${rsvp.name} - Phone: ${rsvp.phone} - Plus One: ${rsvp.plusOne}  `;
+        console.log(rsvp, id);
+        listItem.textContent = `${rsvp.name} - Phone: ${rsvp.phone} - Plus One: ${rsvp.plusOne} `;
 
         const removeBtn = document.createElement("button");
         removeBtn.textContent = "X";
         removeBtn.className = "remove-btn";
-        removeBtn.onclick = () => removeRSVP(index);
+        removeBtn.onclick = () => removeRSVP(id);
 
         listItem.appendChild(removeBtn);
         rsvpList.appendChild(listItem);
       });
     }
 
-    function removeRSVP(index) {
-      rsvps.splice(index, 1);
-      localStorage.setItem("rsvps", JSON.stringify(rsvps));
-      renderRSVPs();
+    function removeRSVP(id) {
+      const rsvpRef = ref(database, `rsvps/${id}`);
+      remove(rsvpRef)
+        .then(() => {
+          console.log("RSVP removed successfully");
+        })
+        .catch((error) => {
+          console.error("Error removing RSVP: ", error);
+        });
     }
 
-    renderRSVPs();
+    const rsvpRef = ref(database, "rsvps");
+    onValue(rsvpRef, (snapshot) => {
+      const rsvps = snapshot.val() || {};
+      renderRSVPs(rsvps);
+    });
   </script>
 </body>

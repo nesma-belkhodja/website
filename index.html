@@ -500,14 +500,6 @@
           }
         `;
 
-      setInterval(() => {
-        const images = Array.from(carouselImages.children);
-        images.forEach((image) => {
-          const clone = image.cloneNode(true);
-          carouselImages.appendChild(clone);
-        });
-      }, 10000);
-
       const titleImages = document.querySelector(".title-images");
       const titleImagePaths = [
         "images/title/Cool Text - Fishing Boat 490596285857418.png",
@@ -527,6 +519,43 @@
         img.alt = "Title Image";
         titleImages.appendChild(img);
       });
+
+     
+
+      const rsvpDisplayList = document.getElementById("rsvpDisplayList");
+
+      const flounders = document.querySelectorAll("img[alt='Flounder']");
+
+      setInterval(() => {
+        flounders.forEach((flounder) => {
+          const currentTransform = flounder.style.transform;
+          flounder.style.transform = currentTransform.includes("scaleX(-1)")
+            ? "scaleX(1)"
+            : "scaleX(-1)";
+        });
+      }, 1000);
+    </script>
+
+    <script type="module">
+      // Import Firebase SDK
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+      import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-database.js";
+
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyC46z3cPIfPwWUcosOxrlatfAXy4uPYP44",
+        authDomain: "fishing-78a3f.firebaseapp.com",
+        databaseURL: "https://fishing-78a3f-default-rtdb.firebaseio.com",
+        projectId: "fishing-78a3f",
+        storageBucket: "fishing-78a3f.firebasestorage.app",
+        messagingSenderId: "185725420885",
+        appId: "1:185725420885:web:3ec54353344409374d5bdc",
+        measurementId: "G-85WWR1QV6B"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const database = getDatabase(app);
 
       const emojis = [
         ":¨ ·.· ¨:",
@@ -549,69 +578,49 @@
         "⊹₊⟡⋆",
         "⋆✴︎˚｡⋆",
       ];
+      // Function to load RSVPs from Firebase
+      function loadRSVPs() {
+        const rsvpRef = ref(database, "rsvps");
+        onValue(rsvpRef, (snapshot) => {
+          const rsvps = snapshot.val();
+          const rsvpSection = document.querySelector(".rsvp-list-section");
 
+          if (!rsvps || Object.keys(rsvps).length === 0) {
+            rsvpSection.style.display = "none"; // Hide the guest list section if no RSVPs
+          } else {
+            rsvpSection.style.display = "block"; // Show the guest list section if RSVPs exist
+            rsvpDisplayList.innerHTML = "";
+
+            Object.entries(rsvps).forEach(([id, rsvp]) => {
+              const listItem = document.createElement("li");
+              const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+              listItem.innerHTML = rsvp.plusOne === "Yes"
+                ? `${randomEmoji} ${rsvp.name} (<strong style='color: #4a4a4a'>+1</strong>)`
+                : `${rsvp.name} ${randomEmoji}`;
+              rsvpDisplayList.appendChild(listItem);
+            });
+          }
+        });
+      }
       const rsvpForm = document.getElementById("rsvpForm");
 
+      // Event listener for RSVP form submission
       rsvpForm.addEventListener("submit", (event) => {
-        event.preventDefault(); // Prevent form submission
+        event.preventDefault();
 
         const name = document.getElementById("name").value;
         const phone = document.getElementById("phone").value;
         const plusOne = document.getElementById("plusOne").value;
 
-        // Retrieve existing RSVPs from localStorage
-        const rsvps = JSON.parse(localStorage.getItem("rsvps")) || [];
+        const rsvp = { name, phone, plusOne };
+        const rsvpRef = ref(database, "rsvps");
+        push(rsvpRef, rsvp);
 
-        // Add the new RSVP to the list
-        rsvps.push({ name, phone, plusOne });
-
-        // Save the updated list back to localStorage
-        localStorage.setItem("rsvps", JSON.stringify(rsvps));
-
-        // Clear the form
         rsvpForm.reset();
-
-        loadRSVPs(); // Reload the RSVP list
       });
-
-      const rsvpDisplayList = document.getElementById("rsvpDisplayList");
-
-      function loadRSVPs() {
-        const rsvps = JSON.parse(localStorage.getItem("rsvps")) || [];
-        const rsvpSection = document.querySelector(".rsvp-list-section");
-
-        if (rsvps.length === 0) {
-          rsvpSection.style.display = "none"; // Hide the guest list section if no RSVPs
-        } else {
-          rsvpSection.style.display = "block"; // Show the guest list section if RSVPs exist
-          rsvpDisplayList.innerHTML = "";
-
-          rsvps.forEach((rsvp) => {
-            const randomEmoji =
-              emojis[Math.floor(Math.random() * emojis.length)];
-            const listItem = document.createElement("li");
-            listItem.innerHTML =
-              rsvp.plusOne === "Yes"
-                ? `${randomEmoji} ${rsvp.name} (<strong style='color: #4a4a4a'>+1</strong>)`
-                : `${rsvp.name} ${randomEmoji}`;
-            rsvpDisplayList.appendChild(listItem);
-          });
-        }
-      }
 
       // Load RSVPs on page load
       loadRSVPs();
-
-      const flounders = document.querySelectorAll("img[alt='Flounder']");
-
-      setInterval(() => {
-        flounders.forEach((flounder) => {
-          const currentTransform = flounder.style.transform;
-          flounder.style.transform = currentTransform.includes("scaleX(-1)")
-            ? "scaleX(1)"
-            : "scaleX(-1)";
-        });
-      }, 1000);
     </script>
   </body>
 </html>
