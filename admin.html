@@ -1,0 +1,47 @@
+<body>
+  <header>
+    <h1>RSVP Admin Page</h1>
+  </header>
+  <div class="rsvp-list">
+    <h2 id="rsvpCount">Total RSVPs: 0</h2>
+    <!-- Added RSVP count -->
+    <ul id="rsvpList">
+      <!-- RSVPs will be dynamically loaded here -->
+    </ul>
+  </div>
+  <script>
+    // Fetch RSVPs from localStorage and display them
+    const rsvpList = document.getElementById("rsvpList");
+    let rsvps = JSON.parse(localStorage.getItem("rsvps")) || [];
+
+    function renderRSVPs() {
+      const rsvpCount = document.getElementById("rsvpCount");
+      rsvpList.innerHTML = "";
+      const totalHeadcount = rsvps.reduce((count, rsvp) => {
+        return count + (rsvp.plusOne === "Yes" ? 2 : 1);
+      }, 0);
+      rsvpCount.textContent = `RSVPs (${totalHeadcount})`; // Update RSVP count to include plus ones
+
+      rsvps.forEach((rsvp, index) => {
+        const listItem = document.createElement("li");
+        listItem.textContent = `${rsvp.name} - Phone: ${rsvp.phone} - Plus One: ${rsvp.plusOne}  `;
+
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "X";
+        removeBtn.className = "remove-btn";
+        removeBtn.onclick = () => removeRSVP(index);
+
+        listItem.appendChild(removeBtn);
+        rsvpList.appendChild(listItem);
+      });
+    }
+
+    function removeRSVP(index) {
+      rsvps.splice(index, 1);
+      localStorage.setItem("rsvps", JSON.stringify(rsvps));
+      renderRSVPs();
+    }
+
+    renderRSVPs();
+  </script>
+</body>

@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Birthday</title>
+    <style>
+      @font-face {
+        font-family: "NB Akademie";
+        src: url("fonts/NB Akademie Mono Std.ttf") format("truetype");
+        font-weight: normal;
+        font-style: normal;
+      }
+
+      /* General Reset */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "NB Akademie", sans-serif; /* Apply NB Akademie font globally */
+        background: #f4f4f4;
+        color: #333;
+        overflow-x: hidden;
+        letter-spacing: -0.5px; /* Reduced letter spacing to make letters closer together */
+      }
+
+      header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        margin: 0 auto;
+        padding: 10px 0; /* Reduced vertical margins */
+        border: 2px solid black; /* Added black border around the entire header */
+      }
+
+      .title-carousel {
+        width: 60%; /* Reduced to 40% smaller */
+        height: 20px; /* Adjusted height to 20px */
+        overflow: hidden;
+        position: relative;
+        text-align: center;
+        padding: 10px 0; /* Reduced vertical margins */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: none; /* Removed black border around the title */
+        flex-grow: 1;
+        margin: 0 20px;
+      }
+
+      .title-images {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .title-images img {
+        max-width: 100%; /* Ensure the image scales within the container */
+        max-height: 100%; /* Prevent image cutoff */
+        object-fit: contain; /* Maintain aspect ratio without cropping */
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: auto;
+        height: 60%; /* Scale images to match the smaller carousel */
+        margin: auto;
+        opacity: 0;
+        animation: fadeInOut 7.5s linear infinite;
+      }
+
+      .title-images img:nth-child(1) {
+        animation-delay: 0s;
+      }
+
+      .title-images img:nth-child(2) {
+        animation-delay: 1.5s;
+      }
+
+      .title-images img:nth-child(3) {
+        animation-delay: 3s;
+      }
+
+      .title-images img:nth-child(4) {
+        animation-delay: 4.5s;
+      }
+
+      .title-images img:nth-child(5) {
+        animation-delay: 6s;
+      }
+
+      @keyframes fadeInOut {
+        0%,
+        20% {
+          opacity: 1;
+        }
+        25%,
+        100% {
+          opacity: 0;
+        }
+      }
+
+      header h1 {
+        font-size: 3rem;
+        font-weight: bold;
+        letter-spacing: 2px;
+      }
+
+      header p {
+        font-size: 1.2rem;
+        margin-top: 10px;
+      }
+
+      .carousel {
+        width: 100%; /* Full width banner */
+        overflow: hidden;
+        position: relative;
+      }
+
+      .carousel-images {
+        display: flex;
+        animation: scroll 15s linear infinite; /* Slowed down the animation */
+      }
+
+      .carousel-images img {
+        width: 20%; /* Show more images at a time to create the illusion of faster movement */
+        flex-shrink: 0;
+      }
+
+      @keyframes scroll {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-100%); /* Adjusted to loop seamlessly */
+        }
+      }
+
+      .content {
+        padding: 20px 10px; /* Reduced vertical margins */
+        text-align: left;
+      }
+
+      .content h2 {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+      }
+
+      .content p {
+        font-size: 1.2rem;
+        line-height: 1.6;
+        color: #555;
+        margin: 10px 10px; /* Added margin between paragraphs */
+      }
+
+      .rsvp-section {
+        background: #000;
+        color: #fff;
+        padding: 30px 10px; /* Reduced vertical margins */
+        text-align: center;
+      }
+
+      .rsvp-section h2 {
+        font-size: 2rem;
+        margin-bottom: 20px;
+      }
+
+      .rsvp-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+
+      .rsvp-form input,
+      .rsvp-form select,
+      .rsvp-form button {
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        font-family: "NB Akademie", sans-serif; /* Match the global font */
+      }
+
+      .rsvp-form button {
+        background: #ff4081;
+        color: #fff;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .rsvp-form button:hover {
+        background: #e91e63;
+      }
+
+      footer {
+        background: #222;
+        color: #fff;
+        text-align: center;
+        padding: 20px;
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 768px) {
+        header {
+          padding: 0px 10px; /* Adjust padding for smaller screens */
+        }
+
+        header h1 {
+          font-size: 2rem; /* Reduce font size for mobile */
+        }
+
+        header p {
+          font-size: 1rem; /* Adjust paragraph font size */
+        }
+
+        .carousel {
+          height: 120px; /* Adjust carousel height for mobile */
+        }
+
+        .carousel-images img {
+          width: 30%; /* Show more images at a time */
+        }
+
+        .content {
+          padding: 20px 10px; /* Reduce padding for content */
+        }
+
+        .content h2 {
+          font-size: 2rem; /* Adjust heading size */
+        }
+
+        .content p {
+          font-size: 1rem; /* Adjust paragraph size */
+        }
+
+        .rsvp-section {
+          padding: 30px 10px; /* Adjust RSVP section padding */
+        }
+
+        .rsvp-form {
+          gap: 10px; /* Reduce gap between form elements */
+        }
+
+        .rsvp-form input,
+        .rsvp-form select,
+        .rsvp-form button {
+          font-size: 0.9rem; /* Adjust form element font size */
+        }
+
+        .title-carousel {
+          height: 70px; /* Adjusted for mobile */
+        }
+
+        .title-images img {
+          height: 80%; /* Slightly larger for mobile */
+        }
+      }
+
+      .title-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: 5px 0;
+      }
+
+      .box {
+        width: 50px;
+        height: 65px;
+        border: 2px solid black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0; /* Removed any padding */
+      }
+
+      .rsvp-list-section {
+        padding: 20px;
+        background: #f9f9f9;
+        border-top: 1px solid #ddd;
+        margin-top: 0px;
+        position: relative;
+        top: -50%;
+        transform: translateY(50%);
+        z-index: 10;
+      }
+
+      .rsvp-list-section h2 {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+        padding-top: 20px;
+        text-align: center;
+      }
+
+      .rsvp-list-section ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .rsvp-list-section li {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .rsvp-list-section li:last-child {
+        border-bottom: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="title-container">
+        <div class="box">
+          <img
+            src="images/fish.png"
+            alt="Fish Image"
+            style="width: 100%; height: 100%; object-fit: contain"
+          />
+        </div>
+        <div class="title-carousel">
+          <div class="title-images"></div>
+        </div>
+        <div class="box">
+          <img
+            src="images/fish.png"
+            alt="Fish Image"
+            style="width: 100%; height: 100%; object-fit: contain"
+          />
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <h2>For My Birthday</h2>
+      <div class="text-align-left">
+        <p class="font-bold">We are going fishing....</p>
+        <p>On Saturday, September 27 from 1-5pm</p>
+        <div class="carousel" id="carousel">
+          <div class="carousel-images"></div>
+        </div>
+        <p>
+          The boat leaves out of Sheepshead Bay and lasts 4 hours. They provide
+          you with all the bait, equipment, and instruction and if you catch a
+          fish that's of legal size/type they will filet it and you can take it
+          home... also we can bring food and drinks on the boat</a>.
+        </p>
+        <br />
+        <p style="text-align: center;">
+          <a href="more-info.html" style="text-decoration: none; color: blue;">
+            🌀 More details here 🌀
+          </a>
+        </p>
+        <br />
+        <p>
+          Seriously no pressure if this is not your vibe
+          <img
+            src="https://i.pinimg.com/originals/08/87/0b/08870bc524f48cf615db1582575a5e4e.gif"
+            alt="Love"
+            style="width: auto; height: 14px; margin-left: 0px"
+          />
+
+          ALL LOVE Thank you for reading all of this...
+        </p>
+      </div>
+    </div>
+
+    <div class="rsvp-section" style="position: relative; z-index: 100">
+      <h2>RSVP</h2>
+      <form class="rsvp-form" id="rsvpForm">
+        <input type="text" id="name" placeholder="Name" required />
+        <input type="tel" id="phone" placeholder="Phone Number" required />
+        <select id="plusOne" required>
+          <option value="" disabled selected>Plus One?</option>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+
+    <div class="rsvp-list-section">
+      <div
+        style="
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+          margin-bottom: 20px;
+          margin-top: -84px;
+        "
+      >
+        <img
+          src="images/flounder.gif"
+          alt="Flounder"
+          style="width: auto; height: 45px"
+        />
+        <img
+          src="images/flounder.gif"
+          alt="Flounder"
+          style="width: auto; height: 45px; transform: scaleX(-1)"
+        />
+        <img
+          src="images/flounder.gif"
+          alt="Flounder"
+          style="width: auto; height: 45px"
+        />
+        <img
+          src="images/flounder.gif"
+          alt="Flounder"
+          style="width: auto; height: 45px; transform: scaleX(-1)"
+        />
+        <img
+          src="images/flounder.gif"
+          alt="Flounder"
+          style="width: auto; height: 45px"
+        />
+      </div>
+      <h2>Guest List</h2>
+      <ul id="rsvpDisplayList">
+        <!-- RSVPs will be dynamically loaded here -->
+      </ul>
+    </div>
+
+    <div style="text-align: center; margin-top: -70px">
+      <img
+        src="images/ocean.gif"
+        alt="Ocean"
+        style="max-width: 100%; height: auto"
+      />
+    </div>
+
+    <script>
+      const carousel = document.getElementById("carousel");
+      const carouselImages = carousel.querySelector(".carousel-images");
+
+      const carouselImagePaths = [
+        "images/carousel/IMG_7300.jpg",
+        "images/carousel/IMG_2280.JPEG",
+        "images/carousel/IMG_7249.jpg",
+        "images/carousel/IMG_0329.jpg",
+        "images/carousel/IMG_5143.JPEG",
+        "images/carousel/IMG_7252.jpg",
+        "images/carousel/IMG_7289.jpg",
+        "images/carousel/IMG_7306.jpg",
+        "images/carousel/IMG_7311.jpg",
+        "images/carousel/IMG_7315.jpg",
+        "images/carousel/IMG_7330.jpg",
+        "images/carousel/IMG_7334.jpg",
+        "images/carousel/IMG_7355.jpg",
+        "images/carousel/IMG_7389.jpg",
+        "images/carousel/IMG_7248.jpg",
+        "images/carousel/IMG_7396.jpg",
+        "images/carousel/IMG_7412.jpg",
+        "images/carousel/IMG_7420.jpg",
+        "images/carousel/IMG_7425.jpg",
+        "images/carousel/IMG_7428.jpg",
+        "images/carousel/SAM_1350.jpg",
+        "images/carousel/SAM_1353.jpg",
+      ];
+
+      // Clear existing images
+      carouselImages.innerHTML = "";
+
+      // Add all images from the carousel folder to the second carousel
+      carouselImagePaths.forEach((path) => {
+        const img = document.createElement("img");
+        img.src = path;
+        img.alt = "Carousel Image";
+        carouselImages.appendChild(img);
+      });
+
+      const images = Array.from(carouselImages.children);
+
+      // Calculate the animation duration dynamically based on the number of images
+      const totalImages = images.length; // Use the actual number of images
+      const animationDuration = 50; // Set the total time for all images to scroll (in seconds)
+      const perImageDuration = animationDuration / totalImages; // Time per image
+
+      document.querySelector("style").innerHTML += `
+          .carousel-images {
+              animation: scroll ${animationDuration}s linear infinite;
+          }
+
+          @keyframes scroll {
+              0% {
+                  transform: translateX(0);
+              }
+              100% {
+                  transform: translateX(-${100 * totalImages}%);
+              }
+          }
+        `;
+
+      setInterval(() => {
+        const images = Array.from(carouselImages.children);
+        images.forEach((image) => {
+          const clone = image.cloneNode(true);
+          carouselImages.appendChild(clone);
+        });
+      }, 10000);
+
+      const titleImages = document.querySelector(".title-images");
+      const titleImagePaths = [
+        "images/title/Cool Text - Fishing Boat 490596285857418.png",
+        "images/title/cooltext490473119880004 (1).png",
+        "images/title/cooltext490473226384828.png",
+        "images/title/cooltext490475480366864.png",
+        "images/title/cooltext490599855617085 (1).png",
+      ];
+
+      // Clear existing images
+      titleImages.innerHTML = "";
+
+      // Add all images from the title folder to the keyframe animation
+      titleImagePaths.forEach((path) => {
+        const img = document.createElement("img");
+        img.src = path;
+        img.alt = "Title Image";
+        titleImages.appendChild(img);
+      });
+
+      const emojis = [
+        ":¨ ·.· ¨:",
+        "`· . 𐙚",
+        "( ˘͈ ᵕ ˘͈♡)",
+        "( ᴗ͈ˬᴗ͈)ഒ",
+        "૮₍  ˶•⤙•˶ ₎ა",
+        "(´｡• ᵕ •｡`)",
+        "(⸝⸝ᵕᴗᵕ⸝⸝)",
+        "˗ˏˋ ♡ ˎˊ˗",
+        "◝(ᵔᗜᵔ)◜",
+        "(˶˃ ᵕ ˂˶)",
+        ">-;;⁠;⁠;€ᐷ",
+        "⋆˚꩜｡",
+        "(*ᴗ͈ˬᴗ͈)ꕤ*.ﾟ",
+        "( ^‿^ )ﾉﾞ",
+        "( •̯́ ₃ •̯̀)",
+        "(๑>◡<๑)",
+        "(⁎⁍̴̛ᴗ⁍̴̛⁎)",
+        "⊹₊⟡⋆",
+        "⋆✴︎˚｡⋆",
+      ];
+
+      const rsvpForm = document.getElementById("rsvpForm");
+
+      rsvpForm.addEventListener("submit", (event) => {
+        event.preventDefault(); // Prevent form submission
+
+        const name = document.getElementById("name").value;
+        const phone = document.getElementById("phone").value;
+        const plusOne = document.getElementById("plusOne").value;
+
+        // Retrieve existing RSVPs from localStorage
+        const rsvps = JSON.parse(localStorage.getItem("rsvps")) || [];
+
+        // Add the new RSVP to the list
+        rsvps.push({ name, phone, plusOne });
+
+        // Save the updated list back to localStorage
+        localStorage.setItem("rsvps", JSON.stringify(rsvps));
+
+        // Clear the form
+        rsvpForm.reset();
+
+        loadRSVPs(); // Reload the RSVP list
+      });
+
+      const rsvpDisplayList = document.getElementById("rsvpDisplayList");
+
+      function loadRSVPs() {
+        const rsvps = JSON.parse(localStorage.getItem("rsvps")) || [];
+        const rsvpSection = document.querySelector(".rsvp-list-section");
+
+        if (rsvps.length === 0) {
+          rsvpSection.style.display = "none"; // Hide the guest list section if no RSVPs
+        } else {
+          rsvpSection.style.display = "block"; // Show the guest list section if RSVPs exist
+          rsvpDisplayList.innerHTML = "";
+
+          rsvps.forEach((rsvp) => {
+            const randomEmoji =
+              emojis[Math.floor(Math.random() * emojis.length)];
+            const listItem = document.createElement("li");
+            listItem.innerHTML =
+              rsvp.plusOne === "Yes"
+                ? `${randomEmoji} ${rsvp.name} (<strong style='color: #4a4a4a'>+1</strong>)`
+                : `${rsvp.name} ${randomEmoji}`;
+            rsvpDisplayList.appendChild(listItem);
+          });
+        }
+      }
+
+      // Load RSVPs on page load
+      loadRSVPs();
+
+      const flounders = document.querySelectorAll("img[alt='Flounder']");
+
+      setInterval(() => {
+        flounders.forEach((flounder) => {
+          const currentTransform = flounder.style.transform;
+          flounder.style.transform = currentTransform.includes("scaleX(-1)")
+            ? "scaleX(1)"
+            : "scaleX(-1)";
+        });
+      }, 1000);
+    </script>
+  </body>
+</html>
