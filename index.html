@@ -121,13 +121,14 @@
 
       .carousel {
         width: 100%; /* Full width banner */
-        overflow: hidden;
         position: relative;
+        display: flex;
+        justify-content: right; /* Center the carousel */
       }
 
       .carousel-images {
         display: flex;
-        animation: scroll 15s linear infinite; /* Slowed down the animation */
+        justify-content: center;
       }
 
       .carousel-images img {
@@ -226,11 +227,12 @@
         }
 
         .carousel {
-          height: 120px; /* Adjust carousel height for mobile */
+          height: 160px; /* Adjust carousel height for mobile */
+          width: 50%;
         }
 
         .carousel-images img {
-          width: 30%; /* Show more images at a time */
+          width: 10%; /* Show more images at a time */
         }
 
         .content {
@@ -443,62 +445,64 @@
       const carouselImages = carousel.querySelector(".carousel-images");
 
       const carouselImagePaths = [
-        "images/carousel/IMG_7300.jpg",
-        "images/carousel/IMG_2280.JPEG",
-        "images/carousel/IMG_7249.jpg",
-        "images/carousel/IMG_0329.jpg",
-        "images/carousel/IMG_5143.JPEG",
-        "images/carousel/IMG_7252.jpg",
-        "images/carousel/IMG_7289.jpg",
-        "images/carousel/IMG_7306.jpg",
-        "images/carousel/IMG_7311.jpg",
-        "images/carousel/IMG_7315.jpg",
-        "images/carousel/IMG_7330.jpg",
-        "images/carousel/IMG_7334.jpg",
-        "images/carousel/IMG_7355.jpg",
-        "images/carousel/IMG_7389.jpg",
-        "images/carousel/IMG_7248.jpg",
-        "images/carousel/IMG_7396.jpg",
-        "images/carousel/IMG_7412.jpg",
-        "images/carousel/IMG_7420.jpg",
-        "images/carousel/IMG_7425.jpg",
-        "images/carousel/IMG_7428.jpg",
-        "images/carousel/SAM_1350.jpg",
-        "images/carousel/SAM_1353.jpg",
+        "images/carousel/IMG_0329.webp",
+         "images/carousel/IMG_7412.webp",
+        "images/carousel/IMG_5143.webp",
+        "images/carousel/IMG_7248.webp",
+        "images/carousel/IMG_7249.webp",
+        "images/carousel/IMG_7252.webp",
+        "images/carousel/IMG_7289.webp",
+        "images/carousel/IMG_7300.webp",
+        "images/carousel/IMG_7306.webp",
+        "images/carousel/IMG_7311.webp",
+        "images/carousel/IMG_7315.webp",
+        "images/carousel/IMG_7250.webp",
+        "images/carousel/IMG_7330.webp",
+        "images/carousel/IMG_7334.webp",
+        "images/carousel/IMG_7355.webp",
+        "images/carousel/IMG_7389.webp",
+        "images/carousel/IMG_2280.webp",
+        "images/carousel/IMG_7396.webp",
+        "images/carousel/IMG_7420.webp",
+        "images/carousel/IMG_7425.webp",
+        "images/carousel/IMG_7428.webp",
+        "images/carousel/SAM_1350.webp",
+        "images/carousel/SAM_1353.webp",
       ];
 
-      // Clear existing images
-      carouselImages.innerHTML = "";
+      const carouselContainer = document.querySelector(".carousel-images");
 
-      // Add all images from the carousel folder to the second carousel
+      // Clear existing images
+      carouselContainer.innerHTML = "";
+
+      // Add images to the carousel container
       carouselImagePaths.forEach((path) => {
         const img = document.createElement("img");
         img.src = path;
         img.alt = "Carousel Image";
-        carouselImages.appendChild(img);
+        img.style.opacity = 0;
+        img.style.transition = "opacity 0.5s ease-in-out";
+        img.style.position = "absolute";
+        img.style.width = "100%";
+        img.style.height = "100%";
+        img.style.objectFit = "cover";
+        carouselContainer.appendChild(img);
       });
 
-      const images = Array.from(carouselImages.children);
+      const images = Array.from(carouselContainer.children);
+      let currentIndex = 0;
 
-      // Calculate the animation duration dynamically based on the number of images
-      const totalImages = images.length; // Use the actual number of images
-      const animationDuration = 50; // Set the total time for all images to scroll (in seconds)
-      const perImageDuration = animationDuration / totalImages; // Time per image
+      const showNextImage = () => {
+        images.forEach((img, index) => {
+          img.style.opacity = index === currentIndex ? 1 : 0;
+        });
+        currentIndex = (currentIndex + 1) % images.length;
+      };
 
-      document.querySelector("style").innerHTML += `
-          .carousel-images {
-              animation: scroll ${animationDuration}s linear infinite;
-          }
+      setInterval(showNextImage, 1000); // Change image every 1.5 seconds
 
-          @keyframes scroll {
-              0% {
-                  transform: translateX(0);
-              }
-              100% {
-                  transform: translateX(-${100 * totalImages}%);
-              }
-          }
-        `;
+      // Initialize the first image
+      showNextImage();
 
       const titleImages = document.querySelector(".title-images");
       const titleImagePaths = [
@@ -520,8 +524,6 @@
         titleImages.appendChild(img);
       });
 
-     
-
       const rsvpDisplayList = document.getElementById("rsvpDisplayList");
 
       const flounders = document.querySelectorAll("img[alt='Flounder']");
@@ -534,6 +536,8 @@
             : "scaleX(-1)";
         });
       }, 1000);
+
+
     </script>
 
     <script type="module">
