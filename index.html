@@ -521,13 +521,19 @@
         currentIndex = (currentIndex + 1) % images.length;
       };
 
-      // Show the first image for 4 seconds before starting the carousel
-      setTimeout(() => {
-        setInterval(showNextImage, 1000); // Change image every 1 second
-      }, 4000); // Delay of 4 seconds
+      // Start the carousel only when all images are loaded
+      const imagePromises = images.map(
+        (img) =>
+          new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = resolve; // Resolve even if an image fails to load
+          })
+      );
 
-      // Initialize the first image
-      showNextImage();
+      Promise.all(imagePromises).then(() => {
+        setInterval(showNextImage, 1000); // Change image every 1 second
+        showNextImage(); // Initialize the first image
+      });
 
       const titleImages = document.querySelector(".title-images");
       const titleImagePaths = [
@@ -653,3 +659,4 @@
     </script>
   </body>
 </html>
+``` 
