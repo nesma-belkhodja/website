@@ -476,7 +476,7 @@
       carouselContainer.innerHTML = "";
 
       // Add images to the carousel container
-      carouselImagePaths.forEach((path) => {
+      carouselImagePaths.forEach((path, index) => {
         const img = document.createElement("img");
         img.src = path;
         img.alt = "Carousel Image";
@@ -487,6 +487,23 @@
         img.style.width = "100%";
         img.style.height = "100%";
         img.style.objectFit = "cover";
+
+        // Add responsive images for better performance on mobile
+        img.srcset = `
+          ${path.replace('.webp', '-small.webp')} 480w,
+          ${path} 800w
+        `;
+        img.sizes = "(max-width: 600px) 480px, 800px";
+
+        // Preload the first image
+        if (index === 0) {
+          const link = document.createElement("link");
+          link.rel = "preload";
+          link.as = "image";
+          link.href = path;
+          document.head.appendChild(link);
+        }
+
         carouselContainer.appendChild(img);
       });
 
