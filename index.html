@@ -532,8 +532,12 @@
       );
 
       Promise.all(imagePromises).then(() => {
-        setInterval(showNextImage, 1000); // Change image every 1 second
-        showNextImage(); // Initialize the first image
+        // Show the first image for 3 seconds before starting the carousel
+        images[0].style.opacity = 1;
+        setTimeout(() => {
+          setInterval(showNextImage, 1000); // Change image every 1 second
+          showNextImage(); // Initialize the first image
+        }, 2500);
       });
 
       const titleImages = document.querySelector(".title-images");
