@@ -34,9 +34,10 @@
         align-items: center;
         justify-content: center;
         text-align: center;
-        margin: 0 auto;
+        margin: 0 0;
         padding: 10px 0; /* Reduced vertical margins */
         border: 2px solid black; /* Added black border around the entire header */
+        width: 100%;
       }
 
       .title-carousel {
@@ -205,6 +206,10 @@
         background: #e91e63;
       }
 
+      .rsvp-form input[type="checkbox"] {
+        accent-color: #ff4081; /* Match the pink color of the submit button */
+      }
+
       footer {
         background: #222;
         color: #fff;
@@ -215,7 +220,7 @@
 
       @media (max-width: 768px) {
         header {
-          padding: 0px 10px; /* Adjust padding for smaller screens */
+          padding: 0px 2px; /* Adjust padding for smaller screens */
         }
 
         header h1 {
@@ -275,7 +280,7 @@
         justify-content: space-between;
         align-items: center;
         width: 100%;
-        padding: 5px 0;
+        padding: 0px 0;
       }
 
       .box {
@@ -380,11 +385,10 @@
       <form class="rsvp-form" id="rsvpForm">
         <input type="text" id="name" placeholder="Name" required />
         <input type="tel" id="phone" placeholder="Phone Number" required />
-        <select id="plusOne" required>
-          <option value="" disabled selected>Plus One?</option>
-          <option value="Yes">Yes</option>
-          <option value="No">No</option>
-        </select>
+        <label for="plusOne" style="display: flex; align-items: center; gap: 5px;">
+          <input type="checkbox" id="plusOne" />
+          bringing a +1?
+        </label>
         <button type="submit">Submit</button>
       </form>
     </div>
@@ -517,7 +521,10 @@
         currentIndex = (currentIndex + 1) % images.length;
       };
 
-      setInterval(showNextImage, 1000); // Change image every 1.5 seconds
+      // Show the first image for 4 seconds before starting the carousel
+      setTimeout(() => {
+        setInterval(showNextImage, 1000); // Change image every 1 second
+      }, 4000); // Delay of 4 seconds
 
       // Initialize the first image
       showNextImage();
@@ -632,7 +639,7 @@
 
         const name = document.getElementById("name").value;
         const phone = document.getElementById("phone").value;
-        const plusOne = document.getElementById("plusOne").value;
+        const plusOne = document.getElementById("plusOne").checked ? "Yes" : "No";
 
         const rsvp = { name, phone, plusOne };
         const rsvpRef = ref(database, "rsvps");
