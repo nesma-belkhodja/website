@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Birthday</title>
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
     <style>
       @font-face {
         font-family: "NB Akademie";
@@ -20,11 +21,11 @@
       }
 
       body {
-        font-family: "NB Akademie", sans-serif; /* Apply NB Akademie font globally */
+        font-family: "NB Akademie", sans-serif;
         background: #f4f4f4;
         color: #333;
         overflow-x: hidden;
-        letter-spacing: -0.5px; /* Reduced letter spacing to make letters closer together */
+        letter-spacing: -0.5px;
         height: 100px;
       }
 
@@ -35,18 +36,18 @@
         justify-content: center;
         text-align: center;
         margin: 0 0;
-        padding: 10px 0; /* Reduced vertical margins */
-        border: 2px solid black; /* Added black border around the entire header */
+        padding: 10px 0; 
+        border: 2px solid black;
         width: 100%;
       }
 
       .title-carousel {
-        width: 60%; /* Reduced to 40% smaller */
-        height: 20px; /* Adjusted height to 20px */
+        width: 60%; 
+        height: 20px; 
         overflow: hidden;
         position: relative;
         text-align: center;
-        padding: 10px 0; /* Reduced vertical margins */
+        padding: 10px 0; 
         display: flex;
         justify-content: center;
         align-items: center;
@@ -57,7 +58,7 @@
 
       .title-images {
         position: relative;
-        width: 100%;
+        width: 80%;
         height: 100%;
         display: flex;
         justify-content: center;
@@ -69,13 +70,13 @@
         max-height: 100%; /* Prevent image cutoff */
         object-fit: contain; /* Maintain aspect ratio without cropping */
         position: absolute;
-        top: 0;
+        top: 3px;
         left: 0;
         width: auto;
         height: 60%; /* Scale images to match the smaller carousel */
         margin: auto;
         opacity: 0;
-        animation: fadeInOut 7.5s linear infinite;
+        animation: fadeInOut 2.5s linear infinite; /* Halved the duration to double the speed */
       }
 
       .title-images img:nth-child(1) {
@@ -83,19 +84,19 @@
       }
 
       .title-images img:nth-child(2) {
-        animation-delay: 1.5s;
+        animation-delay: 0.5s;
       }
 
       .title-images img:nth-child(3) {
-        animation-delay: 3s;
+        animation-delay: 1s;
       }
 
       .title-images img:nth-child(4) {
-        animation-delay: 4.5s;
+        animation-delay: 1.5s;
       }
 
       .title-images img:nth-child(5) {
-        animation-delay: 6s;
+        animation-delay: 2s;
       }
 
       @keyframes fadeInOut {
@@ -537,11 +538,11 @@
 
       const titleImages = document.querySelector(".title-images");
       const titleImagePaths = [
-        "images/title/Cool Text - Fishing Boat 490596285857418.png",
+        "images/title/Cool Text - Fishing Boat 490824333899468.png",
         "images/title/cooltext490473119880004 (1).png",
         "images/title/cooltext490473226384828.png",
-        "images/title/cooltext490475480366864.png",
         "images/title/cooltext490599855617085 (1).png",
+        "images/title/cooltext490823411285855.png",
       ];
 
       // Clear existing images
@@ -659,4 +660,3 @@
     </script>
   </body>
 </html>
-``` 
