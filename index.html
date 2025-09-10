@@ -11,105 +11,11 @@
         src: url("fonts/NB Akademie Mono Std.ttf") format("truetype");
         font-weight: normal;
         font-style: normal;
+        font-display: swap; /* Ensure text is visible while the font loads */
       }
 
-      /* General Reset */
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: "NB Akademie", sans-serif;
-        background: #f4f4f4;
-        color: #333;
-        overflow-x: hidden;
-        letter-spacing: -0.5px;
-        height: 100px;
-      }
-
-      header {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        margin: 0 0;
-        padding: 10px 0; 
-        border: 2px solid black;
-        width: 100%;
-      }
-
-      .title-carousel {
-        width: 60%; 
-        height: 20px; 
-        overflow: hidden;
-        position: relative;
-        text-align: center;
-        padding: 10px 0; 
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border: none; /* Removed black border around the title */
-        flex-grow: 1;
-        margin: 0 20px;
-      }
-
-      .title-images {
-        position: relative;
-        width: 80%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      .title-images img {
-        max-width: 100%; /* Ensure the image scales within the container */
-        max-height: 100%; /* Prevent image cutoff */
-        object-fit: contain; /* Maintain aspect ratio without cropping */
-        position: absolute;
-        top: 3px;
-        left: 0;
-        width: auto;
-        height: 60%; /* Scale images to match the smaller carousel */
-        margin: auto;
-        opacity: 0;
-        animation: fadeInOut 2.5s linear infinite; /* Halved the duration to double the speed */
-      }
-
-      .title-images img:nth-child(1) {
-        animation-delay: 0s;
-      }
-
-      .title-images img:nth-child(2) {
-        animation-delay: 0.5s;
-      }
-
-      .title-images img:nth-child(3) {
-        animation-delay: 1s;
-      }
-
-      .title-images img:nth-child(4) {
-        animation-delay: 1.5s;
-      }
-
-      .title-images img:nth-child(5) {
-        animation-delay: 2s;
-      }
-
-      @keyframes fadeInOut {
-        0%,
-        20% {
-          opacity: 1;
-        }
-        25%,
-        100% {
-          opacity: 0;
-        }
-      }
-
+      /* Minified CSS */
+      *{margin:0;padding:0;box-sizing:border-box}body{font-family:"NB Akademie",sans-serif;background:#f4f4f4;color:#333;overflow-x:hidden;letter-spacing:-.5px;height:100px}header{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;margin:0;padding:10px 0;border:2px solid black;width:100%}.title-carousel{width:60%;height:20px;overflow:hidden;position:relative;text-align:center;padding:10px 0;display:flex;justify-content:center;align-items:center;border:none;flex-grow:1;margin:0 20px}.title-images{position:relative;width:80%;height:100%;display:flex;justify-content:center;align-items:center}.title-images img{max-width:100%;max-height:100%;object-fit:contain;position:absolute;top:3px;left:0;width:auto;height:60%;margin:auto;opacity:0;animation:fadeInOut 2.5s linear infinite}.title-images img:nth-child(1){animation-delay:0s}.title-images img:nth-child(2){animation-delay:.5s}.title-images img:nth-child(3){animation-delay:1s}.title-images img:nth-child(4){animation-delay:1.5s}.title-images img:nth-child(5){animation-delay:2s}@keyframes fadeInOut{0%,20%{opacity:1}25%,100%{opacity:0}}
       header h1 {
         font-size: 3rem;
         font-weight: bold;
@@ -350,7 +256,7 @@
     <div class="content">
       <h2>For My Birthday</h2>
       <div class="text-align-left">
-        <p class="font-bold">We are going fishing....</p>
+        <p class="font-bold">I am planning a fishing trip</p>
         <p>On Saturday, September 27 from 1-5pm</p>
         <div class="carousel" id="carousel">
           <div class="carousel-images"></div>
@@ -475,6 +381,26 @@
         "images/carousel/SAM_1353.webp",
       ];
 
+      const createImageElement = (path) => {
+        const img = document.createElement("img");
+        img.src = path;
+        img.alt = "Image";
+        // Removed lazy loading
+        img.style.opacity = 0;
+        img.style.transition = "opacity 0.5s ease-in-out";
+        img.style.position = "absolute";
+        img.style.width = "100%";
+        img.style.height = "100%";
+        img.style.objectFit = "cover";
+        img.style.background = "#f4f4f4"; // Placeholder background
+
+        img.onload = () => {
+          img.style.opacity = 1;
+        };
+
+        return img;
+      };
+
       const carouselContainer = document.querySelector(".carousel-images");
 
       // Clear existing images
@@ -482,16 +408,7 @@
 
       // Add images to the carousel container
       carouselImagePaths.forEach((path, index) => {
-        const img = document.createElement("img");
-        img.src = path;
-        img.alt = "Carousel Image";
-        img.loading = "lazy"; // Lazy loading
-        img.style.opacity = 0;
-        img.style.transition = "opacity 0.5s ease-in-out";
-        img.style.position = "absolute";
-        img.style.width = "100%";
-        img.style.height = "100%";
-        img.style.objectFit = "cover";
+        const img = createImageElement(path);
 
         // Add responsive images for better performance on mobile
         img.srcset = `
@@ -537,7 +454,7 @@
         setTimeout(() => {
           setInterval(showNextImage, 1000); // Change image every 1 second
           showNextImage(); // Initialize the first image
-        }, 2500);
+        }, 2000);
       });
 
       const titleImages = document.querySelector(".title-images");
