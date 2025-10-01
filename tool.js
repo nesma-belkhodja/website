@@ -79,7 +79,7 @@ async function fetchArtistBoycotters() {
 }
 
 // Enable CORS
-app.use(cors());
+app.use(cors({ origin: "https://nesma-belkhodja.github.io" }));
 
 // Proxy endpoint to fetch artist names
 app.get("/api/artists", async (req, res) => {
