@@ -1,11 +1,12 @@
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // This tool reads the list of label boycotters and artist boycotters, allows adding new names, and formats them alphabetically.
 
