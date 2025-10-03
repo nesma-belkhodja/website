@@ -79,11 +79,56 @@
     </style>
   </head>
   <body>
-    <div>
+    <div
+      id="password-protection"
+      style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      "
+    >
+      <form id="password-form" style="text-align: center">
+        <label for="password">Enter Password:</label>
+        <input type="password" id="password" name="password" required />
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+    <div id="content" style="display: none">
       <ul id="artist-list">
         <!-- Artist names will be dynamically loaded here -->
       </ul>
     </div>
+    <script>
+      const hashedPassword =
+        "925f7fe559337da418256bc7da51f2c53377e87d91d8c29dca9c541b572865f2";
+
+      document
+        .getElementById("password-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const inputPassword = document.getElementById("password").value;
+          const encoder = new TextEncoder();
+          crypto.subtle
+            .digest("SHA-256", encoder.encode(inputPassword))
+            .then((buffer) => {
+              const hashArray = Array.from(new Uint8Array(buffer));
+              const hashHex = hashArray
+                .map((b) => b.toString(16).padStart(2, "0"))
+                .join("");
+              if (hashHex === hashedPassword) {
+                document.getElementById("password-protection").style.display =
+                  "none";
+                document.getElementById("content").style.display = "block";
+              } else {
+                alert("Incorrect password. Please try again.");
+              }
+            })
+            .catch((error) => {
+              console.error("Error during hashing:", error); // Debugging: Log any errors during hashing
+            });
+        });
+    </script>
     <script>
       async function fetchArtists() {
         const artistList = document.getElementById("artist-list");
