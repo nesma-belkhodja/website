@@ -71,10 +71,10 @@
         transform: translateY(0); /* Reset lift effect */
       }
 
-      #item-1,
-      #item-3 {
+      #item-2,
+      #item-6 {
         background-color: red;
-        border-radius: 8px; /* Add rounded corners */
+        border-radius: 8px; /* Rounded corners */
       }
     </style>
   </head>
@@ -94,7 +94,8 @@
         <button type="submit">Submit</button>
       </form>
     </div>
-    <div id="content" style="display: none">
+
+    <div id="content" style="display: block">
       <ul id="artist-list">
         <!-- Artist names will be dynamically loaded here -->
       </ul>
@@ -136,6 +137,7 @@
           const response = await fetch(
             "https://shielded-mesa-31700-647fedc50526.herokuapp.com/api/artists"
           );
+          // const response = await fetch("http://localhost:3001/api/artists");
           if (!response.ok) {
             throw new Error("Network response was not ok");
           }
@@ -150,19 +152,27 @@
             const listItem = document.createElement("li");
             listItem.textContent = artistElement.textContent.trim();
             listItem.id = `item-${++count}`;
+            if (
+              listItem.id === "item-1" ||
+              listItem.id == "item-3" ||
+              listItem.id == "item-5" ||
+              listItem.id == "item-7"
+            ) {
+              return;
+            }
 
             // Add copy button to the first item
-            if (listItem.id === "item-1") {
+            if (listItem.id === "item-2") {
               const copyButton = document.createElement("button");
               copyButton.textContent = "Copy";
               copyButton.onclick = () => {
-                const item3 = document.getElementById("item-2");
+                const item3 = document.getElementById("item-4");
                 if (item3) {
                   navigator.clipboard.writeText(item3.textContent).then(() => {
                     console.log("Copied to clipboard!");
                   });
                 } else {
-                  alert("Item 2 not found!");
+                  alert("Item 4 not found!");
                 }
               };
               listItem.appendChild(copyButton);
@@ -208,7 +218,7 @@
                     .map((name) => name.trim())
                     .filter((name) => name !== "");
                   if (artistNames.length > 0) {
-                    const item2 = document.getElementById("item-2");
+                    const item2 = document.getElementById("item-4");
                     if (item2) {
                       const existingArtists = item2.textContent
                         .split(/·\s*/)
@@ -262,17 +272,17 @@
             }
 
             // Add copy button to the third item
-            if (listItem.id === "item-3") {
+            if (listItem.id === "item-6") {
               const copyButton = document.createElement("button");
               copyButton.textContent = "Copy";
               copyButton.onclick = () => {
-                const item4 = document.getElementById("item-4");
+                const item4 = document.getElementById("item-8");
                 if (item4) {
                   navigator.clipboard.writeText(item4.textContent).then(() => {
                     console.log("Copied to clipboard!");
                   });
                 } else {
-                  console.log("Item 4 not found!");
+                  console.log("Item 8 not found!");
                 }
               };
               listItem.appendChild(copyButton);
@@ -318,7 +328,7 @@
                     .map((name) => name.trim())
                     .filter((name) => name !== "");
                   if (artistNames.length > 0) {
-                    const item4 = document.getElementById("item-4");
+                    const item4 = document.getElementById("item-8");
                     if (item4) {
                       const existingArtists = item4.textContent
                         .split(/·\s*/)
