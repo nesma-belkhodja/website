@@ -9,7 +9,7 @@
         font-family: Arial, sans-serif;
         margin: 0;
         padding: 20px;
-        background-color: red; /* Changed from green to red */
+        background-color: green; /* Changed from red back to green */
         color: #222; /* Dark text like music.html */
       }
 
@@ -152,7 +152,7 @@
         border-radius: 8px;
         border: 1px solid #eee; /* Light border like music.html */
         border-left: 4px solid #28a745; /* Green accent border */
-        width: 90%; /* Take full width */
+        width: 95%; /* Take full width */
       }
 
       .results-section h3 {
@@ -1024,7 +1024,7 @@
         // Clear previous results and show initial status
         document.getElementById("artist-results").innerHTML = "";
         document.getElementById("summary").style.display = "none";
-        
+
         showStatus(`Checking ${artists.length} artists...`);
         const results = [];
 
@@ -1032,13 +1032,13 @@
           showStatus(
             `Checking artist ${i + 1}/${artists.length}: ${artists[i]}`
           );
-          
+
           const result = await checkSingleArtist(artists[i], accessToken);
           results.push(result);
 
           // Display this single result immediately
           displaySingleResult(result, "artist-results");
-          
+
           // Update summary with current results
           updateSummary(results, []);
 
@@ -1054,7 +1054,7 @@
       // New function to display a single result as it's processed
       function displaySingleResult(result, containerId) {
         const container = document.getElementById(containerId);
-        
+
         const div = document.createElement("div");
 
         // Determine the CSS class and status badge based on availability
@@ -1085,18 +1085,14 @@
                           : ""
                       }
                   </div>
-                  ${
-                    !result.found
-                      ? "<p><em>Not found on Spotify</em></p>"
-                      : ""
-                  }
+                  ${!result.found ? "<p><em>Not found on Spotify</em></p>" : ""}
                   ${
                     result.albums.length > 0
                       ? `
                       <details>
                           <summary>${result.albums.length} album(s) found, ${
-                        result.availableAlbums.length
-                      } available in target region</summary>
+                          result.availableAlbums.length
+                        } available in target region</summary>
                           <ul class="album-list">
                               ${result.albums
                                 .map(
@@ -1104,10 +1100,7 @@
                                   <li>
                                       ${
                                         album.name
-                                      } (${album.release_date.substring(
-                                    0,
-                                    4
-                                  )})
+                                      } (${album.release_date.substring(0, 4)})
                                       ${
                                         album.available_markets &&
                                         album.available_markets.includes("IL")
@@ -1127,9 +1120,6 @@
 
         // Append the new result to the container
         container.appendChild(div);
-        
-        // Scroll to the bottom to show the latest result
-        div.scrollIntoView({ behavior: 'smooth', block: 'end' });
       }
 
       function displayResults(results, containerId, type) {
