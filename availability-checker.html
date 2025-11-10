@@ -1021,24 +1021,32 @@
           return;
         }
 
+        // Skip the first artist in the list
+        const artistsToCheck = artists.slice(1);
+        
+        if (artistsToCheck.length === 0) {
+          showStatus("No artists to check after skipping the first one.", "error");
+          return;
+        }
+
         // Clear previous results and show initial status
         document.getElementById("artist-results").innerHTML = "";
         document.getElementById("summary").style.display = "none";
-
-        showStatus(`Checking ${artists.length} artists...`);
+        
+        showStatus(`Checking ${artistsToCheck.length} artists (skipping first)...`);
         const results = [];
 
-        for (let i = 0; i < artists.length; i++) {
+        for (let i = 0; i < artistsToCheck.length; i++) {
           showStatus(
-            `Checking artist ${i + 1}/${artists.length}: ${artists[i]}`
+            `Checking artist ${i + 1}/${artistsToCheck.length}: ${artistsToCheck[i]}`
           );
-
-          const result = await checkSingleArtist(artists[i], accessToken);
+          
+          const result = await checkSingleArtist(artistsToCheck[i], accessToken);
           results.push(result);
 
           // Display this single result immediately
           displaySingleResult(result, "artist-results");
-
+          
           // Update summary with current results
           updateSummary(results, []);
 
@@ -1047,7 +1055,7 @@
         }
 
         // Final status update
-        showStatus(`Completed checking ${artists.length} artists`, "success");
+        showStatus(`Completed checking ${artistsToCheck.length} artists`, "success");
         setTimeout(hideStatus, 3000);
       }
 
