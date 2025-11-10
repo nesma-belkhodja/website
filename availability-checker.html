@@ -138,6 +138,11 @@
         background-color: #f8fff8;
       }
 
+      .artist-result.partially-available {
+        border-left-color: #ffc107; /* Orange/yellow for partial availability */
+        background-color: #fffdf0;
+      }
+
       .artist-name {
         font-weight: bold;
         font-size: 18px;
@@ -173,6 +178,15 @@
       .unavailable-badge {
         background-color: #28a745; /* Green for good */
         color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        margin-left: 10px;
+      }
+
+      .partially-available-badge {
+        background-color: #ffc107; /* Orange/yellow for partial */
+        color: #212529; /* Dark text for better contrast */
         padding: 2px 8px;
         border-radius: 12px;
         font-size: 12px;
@@ -268,7 +282,7 @@
           </div>
           <div class="stat">
             <span id="available-count" class="stat-number">0</span>
-            <span class="stat-label">Available in Israel</span>
+            <span class="stat-label">Available</span>
           </div>
           <div class="stat">
             <span id="unavailable-count" class="stat-number">0</span>
@@ -316,7 +330,7 @@
         console.log(`[API DEBUG] ${message}`, data);
       }
 
-      function logRequest(url, headers, method = 'GET') {
+      function logRequest(url, headers, method = "GET") {
         debugAPI(`Making ${method} request to: ${url}`, { headers });
       }
 
@@ -326,16 +340,16 @@
           statusText: response.statusText,
           ok: response.ok,
           headers: Object.fromEntries(response.headers.entries()),
-          data: data
+          data: data,
         });
       }
 
       function logError(operation, error, context = {}) {
         console.error(`[ERROR] ${operation}:`, error, context);
-        debugAPI(`Error in ${operation}`, { 
-          error: error.message, 
+        debugAPI(`Error in ${operation}`, {
+          error: error.message,
           stack: error.stack,
-          context 
+          context,
         });
       }
 
@@ -688,12 +702,14 @@
 
       // Spotify API functions
       async function searchSpotifyArtist(artistName, token) {
-        const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(artistName)}&type=artist&limit=1`;
+        const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(
+          artistName
+        )}&type=artist&limit=1`;
         const headers = { Authorization: `Bearer ${token}` };
-        
+
         try {
           logRequest(url, headers);
-          
+
           const response = await fetch(url, { headers });
 
           if (!response.ok) {
@@ -704,16 +720,21 @@
           const data = await response.json();
           logResponse(url, response, {
             totalResults: data.artists.items.length,
-            firstResult: data.artists.items[0] ? {
-              name: data.artists.items[0].name,
-              id: data.artists.items[0].id,
-              popularity: data.artists.items[0].popularity
-            } : null
+            firstResult: data.artists.items[0]
+              ? {
+                  name: data.artists.items[0].name,
+                  id: data.artists.items[0].id,
+                  popularity: data.artists.items[0].popularity,
+                }
+              : null,
           });
 
           return data.artists.items.length > 0 ? data.artists.items[0] : null;
         } catch (error) {
-          logError(`searching for artist ${artistName}`, error, { url, artistName });
+          logError(`searching for artist ${artistName}`, error, {
+            url,
+            artistName,
+          });
           return null;
         }
       }
@@ -722,10 +743,10 @@
         // Remove market parameter to get global availability data
         const url = `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&limit=50`;
         const headers = { Authorization: `Bearer ${token}` };
-        
+
         try {
           logRequest(url, headers);
-          
+
           const response = await fetch(url, { headers });
 
           if (!response.ok) {
@@ -736,20 +757,24 @@
           const data = await response.json();
           logResponse(url, response, {
             totalAlbums: data.items?.length || 0,
-            albumSample: data.items?.slice(0, 3).map(album => ({
-              name: album.name,
-              releaseDate: album.release_date,
-              marketCount: album.available_markets?.length || 0,
-              hasUS: album.available_markets?.includes("US"),
-              hasIL: album.available_markets?.includes("IL"),
-              hasDE: album.available_markets?.includes("DE"),
-              hasGB: album.available_markets?.includes("GB")
-            })) || []
+            albumSample:
+              data.items?.slice(0, 3).map((album) => ({
+                name: album.name,
+                releaseDate: album.release_date,
+                marketCount: album.available_markets?.length || 0,
+                hasUS: album.available_markets?.includes("US"),
+                hasIL: album.available_markets?.includes("IL"),
+                hasDE: album.available_markets?.includes("DE"),
+                hasGB: album.available_markets?.includes("GB"),
+              })) || [],
           });
 
           return data.items || [];
         } catch (error) {
-          logError(`getting albums for artist ${artistId}`, error, { url, artistId });
+          logError(`getting albums for artist ${artistId}`, error, {
+            url,
+            artistId,
+          });
           return [];
         }
       }
@@ -765,7 +790,8 @@
             name: artistName,
             found: false,
             albums: [],
-            availableInIsrael: false,
+            availableInRegion: false,
+            partiallyAvailable: false,
           };
         }
 
@@ -775,13 +801,13 @@
           artistId: artist.id,
           popularity: artist.popularity,
           followers: artist.followers?.total,
-          genres: artist.genres
+          genres: artist.genres,
         });
 
         const albums = await getArtistAlbums(artist.id, token);
         debugAPI(`Retrieved ${albums.length} albums for ${artist.name}`, {
           albumCount: albums.length,
-          albums: albums.map(album => ({
+          albums: albums.map((album) => ({
             name: album.name,
             releaseDate: album.release_date,
             albumType: album.album_type,
@@ -791,23 +817,30 @@
             hasIL: album.available_markets?.includes("IL"),
             hasDE: album.available_markets?.includes("DE"),
             hasGB: album.available_markets?.includes("GB"),
-            allMarkets: album.available_markets?.slice(0, 10) // Show first 10 markets for debugging
-          }))
+            allMarkets: album.available_markets?.slice(0, 10), // Show first 10 markets for debugging
+          })),
         });
 
         const availableAlbums = albums.filter((album) => {
-          const hasIsrael = album.available_markets && album.available_markets.includes("IL");
+          const hasTargetMarket = album.available_markets && album.available_markets.includes("IL");
           debugAPI(`Album availability check: ${album.name}`, {
             hasMarkets: !!album.available_markets,
             marketCount: album.available_markets?.length || 0,
-            hasIL: hasIsrael,
+            hasIL: hasTargetMarket,
             hasUS: album.available_markets?.includes("US"),
             hasDE: album.available_markets?.includes("DE"),
             hasGB: album.available_markets?.includes("GB"),
             sampleMarkets: album.available_markets?.slice(0, 20)
           });
-          return hasIsrael;
+          return hasTargetMarket;
         });
+
+        // Determine availability status
+        const totalAlbums = albums.length;
+        const availableCount = availableAlbums.length;
+        const fullyAvailable = availableCount === totalAlbums && totalAlbums > 0;
+        const partiallyAvailable = availableCount > 0 && availableCount < totalAlbums;
+        const notAvailable = availableCount === 0;
 
         const result = {
           name: artistName,
@@ -815,14 +848,19 @@
           spotifyName: artist.name,
           albums: albums,
           availableAlbums: availableAlbums,
-          availableInIsrael: availableAlbums.length > 0,
+          availableInRegion: fullyAvailable || partiallyAvailable,
+          partiallyAvailable: partiallyAvailable,
+          fullyAvailable: fullyAvailable,
+          notAvailable: notAvailable,
         };
 
         debugAPI(`Final result for ${artistName}`, {
           found: result.found,
           totalAlbums: result.albums.length,
           availableAlbums: result.availableAlbums.length,
-          availableInIsrael: result.availableInIsrael,
+          fullyAvailable: result.fullyAvailable,
+          partiallyAvailable: result.partiallyAvailable,
+          notAvailable: result.notAvailable,
           spotifyName: result.spotifyName
         });
 
@@ -840,13 +878,22 @@
 
         results.forEach((result) => {
           const div = document.createElement("div");
-          div.className = `artist-result ${
-            result.availableInIsrael ? "available" : "unavailable"
-          }`;
-
-          const statusBadge = result.availableInIsrael
-            ? '<span class="available-badge">⚠️ Available in Israel</span>'
-            : '<span class="unavailable-badge">✅ Not Available</span>';
+          
+          // Determine the CSS class and status badge based on availability
+          let cssClass, statusBadge;
+          
+          if (result.partiallyAvailable) {
+            cssClass = "partially-available";
+            statusBadge = '<span class="partially-available-badge">⚠️ Partially Available</span>';
+          } else if (result.availableInRegion) {
+            cssClass = "available";
+            statusBadge = '<span class="available-badge">⚠️ Fully Available</span>';
+          } else {
+            cssClass = "unavailable";
+            statusBadge = '<span class="unavailable-badge">✅ Not Available</span>';
+          }
+          
+          div.className = `artist-result ${cssClass}`;
 
           div.innerHTML = `
                     <div class="artist-name">
@@ -868,7 +915,7 @@
                         <details>
                             <summary>${result.albums.length} album(s) found, ${
                             result.availableAlbums.length
-                          } available in Israel</summary>
+                          } available in target region</summary>
                             <ul class="album-list">
                                 ${result.albums
                                   .map(
@@ -883,8 +930,8 @@
                                         ${
                                           album.available_markets &&
                                           album.available_markets.includes("IL")
-                                            ? '<span class="available-badge">IL</span>'
-                                            : '<span class="unavailable-badge">No IL</span>'
+                                            ? '<span class="available-badge">Available</span>'
+                                            : '<span class="unavailable-badge">Not Available</span>'
                                         }
                                     </li>
                                 `
@@ -904,7 +951,7 @@
       function updateSummary(artistResults, labelResults) {
         const totalArtists = artistResults.length + labelResults.length;
         const availableCount = [...artistResults, ...labelResults].filter(
-          (r) => r.availableInIsrael
+          (r) => r.availableInRegion
         ).length;
         const unavailableCount = totalArtists - availableCount;
 
