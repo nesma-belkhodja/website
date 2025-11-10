@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Album Availability Checker</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+        color: #333;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 30px;
+      }
+
+      .auth-section {
+        background: #e8f4fd;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      .controls {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      button {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background-color: #2980b9;
+      }
+
+      button:disabled {
+        background-color: #bdc3c7;
+        cursor: not-allowed;
+      }
+
+      .status {
+        text-align: center;
+        margin: 20px 0;
+        padding: 10px;
+        border-radius: 6px;
+      }
+
+      .status.loading {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+
+      .status.success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+
+      .status.error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+
+      .results-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-top: 30px;
+      }
+
+      .results-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #3498db;
+      }
+
+      .results-section h3 {
+        margin-top: 0;
+        color: #2c3e50;
+      }
+
+      .artist-result {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: white;
+        border-radius: 6px;
+        border-left: 4px solid #95a5a6;
+      }
+
+      .artist-result.available {
+        border-left-color: #e74c3c;
+      }
+
+      .artist-result.unavailable {
+        border-left-color: #27ae60;
+      }
+
+      .artist-name {
+        font-weight: bold;
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      .album-list {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0;
+      }
+
+      .album-list li {
+        padding: 8px 0;
+        border-bottom: 1px solid #ecf0f1;
+      }
+
+      .album-list li:last-child {
+        border-bottom: none;
+      }
+
+      .available-badge {
+        background-color: #e74c3c;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        margin-left: 10px;
+      }
+
+      .unavailable-badge {
+        background-color: #27ae60;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        margin-left: 10px;
+      }
+
+      .summary {
+        background: #34495e;
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      .summary-stats {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 15px;
+      }
+
+      .stat {
+        text-align: center;
+      }
+
+      .stat-number {
+        font-size: 24px;
+        font-weight: bold;
+        display: block;
+      }
+
+      .stat-label {
+        font-size: 14px;
+        opacity: 0.8;
+      }
+
+      @media (max-width: 768px) {
+        .results-container {
+          grid-template-columns: 1fr;
+        }
+
+        .controls {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Album Availability Checker</h1>
+
+      <div class="auth-section">
+        <h3>Spotify Authentication Required</h3>
+        <p>
+          To check album availability, you need to authenticate with Spotify.
+        </p>
+        <button id="auth-btn" onclick="authenticateSpotify()">
+          Connect to Spotify
+        </button>
+        <div id="auth-status"></div>
+      </div>
+
+      <div class="controls">
+        <button
+          id="check-artists-btn"
+          onclick="checkArtistAvailability()"
+          disabled
+        >
+          Check Artist Albums
+        </button>
+        <button
+          id="check-labels-btn"
+          onclick="checkLabelAvailability()"
+          disabled
+        >
+          Check Label Albums
+        </button>
+        <button id="check-all-btn" onclick="checkAllAvailability()" disabled>
+          Check All
+        </button>
+      </div>
+
+      <div id="status" class="status" style="display: none"></div>
+
+      <div id="summary" class="summary" style="display: none">
+        <h3>Availability Summary</h3>
+        <div class="summary-stats">
+          <div class="stat">
+            <span id="total-artists" class="stat-number">0</span>
+            <span class="stat-label">Total Artists/Labels</span>
+          </div>
+          <div class="stat">
+            <span id="available-count" class="stat-number">0</span>
+            <span class="stat-label">Available in France</span>
+          </div>
+          <div class="stat">
+            <span id="unavailable-count" class="stat-number">0</span>
+            <span class="stat-label">Not Available</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="results-container">
+        <div class="results-section">
+          <h3>🎤 Artist Results</h3>
+          <div id="artist-results"></div>
+        </div>
+        <div class="results-section">
+          <h3>🏷️ Label Results</h3>
+          <div id="label-results"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Spotify API configuration - Replace with YOUR app's Client ID
+      const CLIENT_ID = "612f531da2df4561b5b8c7079e81f391"; // Your actual Client ID from the dashboard
+
+      // GitHub Pages redirect URI
+      const REDIRECT_URI = "https://nesma-belkhodja.github.io/website/availability-checker.html";
+      const SCOPES = "user-read-private";
+
+      let accessToken = null;
+      let tokenExpirationTime = null;
+
+      // Add comprehensive debugging
+      function debugAuth(message, data = {}) {
+        console.log(`[AUTH DEBUG] ${message}`, data);
+        // Also show in UI for better visibility
+        const authStatus = document.getElementById("auth-status");
+        if (authStatus) {
+          authStatus.innerHTML += `<div style="font-size: 12px; color: #666; margin: 5px 0;">${message}</div>`;
+        }
+      }
+
+      // Token management functions
+      function saveToken(token, expiresIn) {
+        debugAuth("Saving token", {
+          token: token.substring(0, 20) + "...",
+          expiresIn,
+        });
+        accessToken = token;
+        tokenExpirationTime = Date.now() + expiresIn * 1000;
+        localStorage.setItem("spotifyToken", token);
+        localStorage.setItem(
+          "spotifyTokenExpiration",
+          tokenExpirationTime.toString()
+        );
+        debugAuth("Token saved successfully");
+      }
+
+      function loadToken() {
+        const token = localStorage.getItem("spotifyToken");
+        const expiration = localStorage.getItem("spotifyTokenExpiration");
+
+        debugAuth("Loading token from storage", {
+          hasToken: !!token,
+          expiration: expiration
+            ? new Date(parseInt(expiration)).toISOString()
+            : "none",
+          currentTime: new Date().toISOString(),
+        });
+
+        if (token && expiration && Date.now() < parseInt(expiration)) {
+          accessToken = token;
+          tokenExpirationTime = parseInt(expiration);
+          debugAuth("Valid token loaded from storage");
+          return token;
+        }
+
+        // Clear expired token
+        debugAuth("Token expired or invalid, clearing");
+        clearToken();
+        return null;
+      }
+
+      function clearToken() {
+        debugAuth("Clearing token");
+        accessToken = null;
+        tokenExpirationTime = null;
+        localStorage.removeItem("spotifyToken");
+        localStorage.removeItem("spotifyTokenExpiration");
+      }
+
+      function isTokenValid() {
+        const valid =
+          accessToken &&
+          tokenExpirationTime &&
+          Date.now() < tokenExpirationTime;
+        debugAuth("Token validity check", {
+          hasAccessToken: !!accessToken,
+          hasExpirationTime: !!tokenExpirationTime,
+          isExpired: tokenExpirationTime
+            ? Date.now() >= tokenExpirationTime
+            : "no expiration",
+          valid,
+        });
+        return valid;
+      }
+
+      // Add a test function to debug Spotify app configuration
+      function testSpotifyApp() {
+        debugAuth("Testing Spotify app configuration");
+        debugAuth("Client ID: " + CLIENT_ID);
+        debugAuth("Redirect URI: " + REDIRECT_URI);
+
+        // Try to make a simple request to test the token
+        if (accessToken) {
+          fetch("https://api.spotify.com/v1/me", {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          })
+            .then((response) => {
+              debugAuth("Token test response", {
+                status: response.status,
+                ok: response.ok,
+              });
+              if (!response.ok) {
+                if (response.status === 401) {
+                  debugAuth("Token is invalid or expired");
+                  clearToken();
+                  updateAuthStatus();
+                }
+              }
+              return response.json();
+            })
+            .then((data) => {
+              debugAuth("Token test data", data);
+            })
+            .catch((error) => {
+              debugAuth("Token test error", { error: error.message });
+            });
+        }
+      }
+
+      // Authentication functions
+      function authenticateSpotify() {
+        debugAuth("Starting Spotify authentication");
+
+        // Clear any existing auth status messages
+        document.getElementById("auth-status").innerHTML =
+          "<p>Redirecting to Spotify...</p>";
+
+        const state = generateRandomString(16);
+        localStorage.setItem("spotify_auth_state", state);
+
+        debugAuth("Generated auth state", { state });
+
+        const params = new URLSearchParams({
+          response_type: "token",
+          client_id: CLIENT_ID,
+          scope: SCOPES,
+          redirect_uri: REDIRECT_URI,
+          state: state,
+        });
+
+        const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
+        debugAuth("Auth URL", { url: authUrl });
+
+        window.location.href = authUrl;
+      }
+
+      function generateRandomString(length) {
+        const possible =
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        let text = "";
+        for (let i = 0; i < length; i++) {
+          text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return text;
+      }
+
+      function handleAuthCallback() {
+        const hash = window.location.hash.substring(1);
+        const urlParams = new URLSearchParams(window.location.search);
+
+        debugAuth("Handling auth callback", {
+          hash: hash,
+          search: window.location.search,
+          href: window.location.href,
+        });
+
+        // Check for error in URL params first
+        const error = urlParams.get("error");
+        if (error) {
+          debugAuth("Auth error from URL params", { error });
+          showStatus("Authentication failed: " + error, "error");
+          return;
+        }
+
+        if (!hash) {
+          debugAuth(
+            "No hash found in URL - this might be normal on first load"
+          );
+          return;
+        }
+
+        const params = new URLSearchParams(hash);
+
+        const accessTokenFromCallback = params.get("access_token");
+        const tokenType = params.get("token_type");
+        const expiresIn = params.get("expires_in");
+        const state = params.get("state");
+        const errorFromHash = params.get("error");
+
+        debugAuth("Callback parameters", {
+          hasAccessToken: !!accessTokenFromCallback,
+          tokenType,
+          expiresIn,
+          state,
+          error: errorFromHash,
+        });
+
+        if (errorFromHash) {
+          debugAuth("Auth error from hash", { error: errorFromHash });
+          showStatus("Authentication failed: " + errorFromHash, "error");
+          return;
+        }
+
+        // Verify state parameter
+        const storedState = localStorage.getItem("spotify_auth_state");
+        debugAuth("State verification", {
+          receivedState: state,
+          storedState: storedState,
+          match: state === storedState,
+        });
+
+        if (!state) {
+          debugAuth("No state parameter received");
+          showStatus("Authentication failed: no state parameter", "error");
+          return;
+        }
+
+        if (!storedState) {
+          debugAuth("No stored state found");
+          showStatus("Authentication failed: no stored state", "error");
+          return;
+        }
+
+        if (state !== storedState) {
+          debugAuth("State mismatch - security error");
+          showStatus("Authentication failed: state mismatch", "error");
+          return;
+        }
+
+        // Clear the hash from URL and remove stored state
+        window.history.replaceState(
+          null,
+          null,
+          window.location.pathname + window.location.search
+        );
+        localStorage.removeItem("spotify_auth_state");
+
+        if (accessTokenFromCallback && tokenType === "Bearer") {
+          debugAuth("Authentication successful");
+          saveToken(accessTokenFromCallback, parseInt(expiresIn));
+          updateAuthStatus();
+          showStatus("Successfully connected to Spotify!", "success");
+          setTimeout(hideStatus, 3000);
+
+          // Test the token immediately
+          setTimeout(() => {
+            testSpotifyApp();
+          }, 1000);
+        } else {
+          debugAuth("Invalid token received", {
+            hasAccessToken: !!accessTokenFromCallback,
+            tokenType,
+          });
+          showStatus("Authentication failed: invalid token", "error");
+        }
+      }
+
+      function updateAuthStatus() {
+        const authStatus = document.getElementById("auth-status");
+        const authBtn = document.getElementById("auth-btn");
+        const checkButtons = [
+          "check-artists-btn",
+          "check-labels-btn",
+          "check-all-btn",
+        ];
+
+        if (isTokenValid()) {
+          authStatus.innerHTML =
+            '<p style="color: green;">✅ Connected to Spotify</p><button onclick="testSpotifyApp()" style="font-size: 12px; padding: 5px;">Test Token</button>';
+          authBtn.textContent = "Reconnect to Spotify";
+          checkButtons.forEach((id) => {
+            document.getElementById(id).disabled = false;
+          });
+        } else {
+          authStatus.innerHTML = '<p style="color: red;">❌ Not connected</p>';
+          authBtn.textContent = "Connect to Spotify";
+          checkButtons.forEach((id) => {
+            document.getElementById(id).disabled = true;
+          });
+        }
+      }
+
+      // Utility functions
+      function showStatus(message, type = "loading") {
+        const status = document.getElementById("status");
+        status.textContent = message;
+        status.className = `status ${type}`;
+        status.style.display = "block";
+      }
+
+      function hideStatus() {
+        document.getElementById("status").style.display = "none";
+      }
+
+      // Read boycott lists from text files
+      async function readBoycottLists() {
+        try {
+          const [artistResponse, labelResponse] = await Promise.all([
+            fetch("./artist_boycotters.txt"),
+            fetch("./label_boycotters.txt"),
+          ]);
+
+          const artistText = await artistResponse.text();
+          const labelText = await labelResponse.text();
+
+          const artists = artistText
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => line && !line.startsWith("//"));
+
+          const labels = labelText
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => line && !line.startsWith("//"));
+
+          return { artists, labels };
+        } catch (error) {
+          console.error("Error reading boycott lists:", error);
+          return { artists: [], labels: [] };
+        }
+      }
+
+      // Spotify API functions
+      async function searchSpotifyArtist(artistName, token) {
+        try {
+          const response = await fetch(
+            `https://api.spotify.com/v1/search?q=${encodeURIComponent(
+              artistName
+            )}&type=artist&limit=1`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          return data.artists.items.length > 0 ? data.artists.items[0] : null;
+        } catch (error) {
+          console.error(`Error searching for artist ${artistName}:`, error);
+          return null;
+        }
+      }
+
+      async function getArtistAlbums(artistId, token) {
+        try {
+          const response = await fetch(
+            `https://api.spotify.com/v1/artists/${artistId}/albums?market=IL&include_groups=album,single&limit=50`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          return data.items || [];
+        } catch (error) {
+          console.error(`Error getting albums for artist ${artistId}:`, error);
+          return [];
+        }
+      }
+
+      // Main checking functions
+      async function checkSingleArtist(artistName, token) {
+        const artist = await searchSpotifyArtist(artistName, token);
+        if (!artist) {
+          return {
+            name: artistName,
+            found: false,
+            albums: [],
+            availableInFrance: false,
+          };
+        }
+
+        const albums = await getArtistAlbums(artist.id, token);
+        const availableAlbums = albums.filter(
+          (album) =>
+            album.available_markets && album.available_markets.includes("FR")
+        );
+
+        return {
+          name: artistName,
+          found: true,
+          spotifyName: artist.name,
+          albums: albums,
+          availableAlbums: availableAlbums,
+          availableInFrance: availableAlbums.length > 0,
+        };
+      }
+
+      function displayResults(results, containerId, type) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = "";
+
+        if (results.length === 0) {
+          container.innerHTML = "<p>No results to display.</p>";
+          return;
+        }
+
+        results.forEach((result) => {
+          const div = document.createElement("div");
+          div.className = `artist-result ${
+            result.availableInFrance ? "available" : "unavailable"
+          }`;
+
+          const statusBadge = result.availableInFrance
+            ? '<span class="available-badge">⚠️ Available in France</span>'
+            : '<span class="unavailable-badge">✅ Not Available</span>';
+
+          div.innerHTML = `
+                    <div class="artist-name">
+                        ${result.name}${statusBadge}
+                        ${
+                          result.found && result.spotifyName !== result.name
+                            ? ` (${result.spotifyName})`
+                            : ""
+                        }
+                    </div>
+                    ${
+                      !result.found
+                        ? "<p><em>Not found on Spotify</em></p>"
+                        : ""
+                    }
+                    ${
+                      result.albums.length > 0
+                        ? `
+                        <details>
+                            <summary>${result.albums.length} album(s) found, ${
+                            result.availableAlbums.length
+                          } available in France</summary>
+                            <ul class="album-list">
+                                ${result.albums
+                                  .map(
+                                    (album) => `
+                                    <li>
+                                        ${
+                                          album.name
+                                        } (${album.release_date.substring(
+                                      0,
+                                      4
+                                    )})
+                                        ${
+                                          album.available_markets &&
+                                          album.available_markets.includes("FR")
+                                            ? '<span class="available-badge">FR</span>'
+                                            : '<span class="unavailable-badge">No FR</span>'
+                                        }
+                                    </li>
+                                `
+                                  )
+                                  .join("")}
+                            </ul>
+                        </details>
+                    `
+                        : ""
+                    }
+                `;
+
+          container.appendChild(div);
+        });
+      }
+
+      function updateSummary(artistResults, labelResults) {
+        const totalArtists = artistResults.length + labelResults.length;
+        const availableCount = [...artistResults, ...labelResults].filter(
+          (r) => r.availableInFrance
+        ).length;
+        const unavailableCount = totalArtists - availableCount;
+
+        document.getElementById("total-artists").textContent = totalArtists;
+        document.getElementById("available-count").textContent = availableCount;
+        document.getElementById("unavailable-count").textContent =
+          unavailableCount;
+        document.getElementById("summary").style.display = "block";
+      }
+
+      async function checkArtistAvailability() {
+        if (!isTokenValid()) {
+          alert("Please authenticate with Spotify first.");
+          return;
+        }
+
+        showStatus("Reading artist boycott list...");
+        const { artists } = await readBoycottLists();
+
+        if (artists.length === 0) {
+          showStatus("No artists found in boycott list.", "error");
+          return;
+        }
+
+        showStatus(`Checking ${artists.length} artists...`);
+        const results = [];
+
+        for (let i = 0; i < artists.length; i++) {
+          showStatus(
+            `Checking artist ${i + 1}/${artists.length}: ${artists[i]}`
+          );
+          const result = await checkSingleArtist(artists[i], accessToken);
+          results.push(result);
+
+          // Add delay to avoid rate limiting
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        displayResults(results, "artist-results", "artist");
+        updateSummary(results, []);
+        hideStatus();
+      }
+
+      async function checkLabelAvailability() {
+        if (!isTokenValid()) {
+          alert("Please authenticate with Spotify first.");
+          return;
+        }
+
+        showStatus("Reading label boycott list...");
+        const { labels } = await readBoycottLists();
+
+        if (labels.length === 0) {
+          showStatus("No labels found in boycott list.", "error");
+          return;
+        }
+
+        showStatus(`Checking ${labels.length} labels...`);
+        const results = [];
+
+        for (let i = 0; i < labels.length; i++) {
+          showStatus(`Checking label ${i + 1}/${labels.length}: ${labels[i]}`);
+          const result = await checkSingleArtist(labels[i], accessToken);
+          results.push(result);
+
+          // Add delay to avoid rate limiting
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        displayResults(results, "label-results", "label");
+        updateSummary([], results);
+        hideStatus();
+      }
+
+      async function checkAllAvailability() {
+        if (!isTokenValid()) {
+          alert("Please authenticate with Spotify first.");
+          return;
+        }
+
+        showStatus("Reading boycott lists...");
+        const { artists, labels } = await readBoycottLists();
+
+        if (artists.length === 0 && labels.length === 0) {
+          showStatus("No artists or labels found in boycott lists.", "error");
+          return;
+        }
+
+        // Check artists
+        const artistResults = [];
+        if (artists.length > 0) {
+          for (let i = 0; i < artists.length; i++) {
+            showStatus(
+              `Checking artist ${i + 1}/${artists.length}: ${artists[i]}`
+            );
+            const result = await checkSingleArtist(artists[i], accessToken);
+            artistResults.push(result);
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
+        }
+
+        // Check labels
+        const labelResults = [];
+        if (labels.length > 0) {
+          for (let i = 0; i < labels.length; i++) {
+            showStatus(
+              `Checking label ${i + 1}/${labels.length}: ${labels[i]}`
+            );
+            const result = await checkSingleArtist(labels[i], accessToken);
+            labelResults.push(result);
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
+        }
+
+        displayResults(artistResults, "artist-results", "artist");
+        displayResults(labelResults, "label-results", "label");
+        updateSummary(artistResults, labelResults);
+        hideStatus();
+      }
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", function () {
+        loadToken(); // Load existing token on page load
+        handleAuthCallback();
+        updateAuthStatus();
+      });
+    </script>
+  </body>
+</html>
