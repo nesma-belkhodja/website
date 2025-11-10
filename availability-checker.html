@@ -259,15 +259,15 @@
         >
           Check Artist Albums
         </button>
-        <button
+        <!-- <button
           id="check-labels-btn"
           onclick="checkLabelAvailability()"
           disabled
         >
           Check Label Albums
-        </button>
+        </button> -->
         <button id="check-all-btn" onclick="checkAllAvailability()" disabled>
-          Check All
+          Check All Artists
         </button>
       </div>
 
@@ -640,7 +640,7 @@
         const authBtn = document.getElementById("auth-btn");
         const checkButtons = [
           "check-artists-btn",
-          "check-labels-btn",
+          // "check-labels-btn", // Commented out
           "check-all-btn",
         ];
 
@@ -672,30 +672,84 @@
         document.getElementById("status").style.display = "none";
       }
 
-      // Read boycott lists from text files
+      // Read boycott lists from nomusicforgenocide.org via proxy
       async function readBoycottLists() {
         try {
-          const [artistResponse, labelResponse] = await Promise.all([
-            fetch("./artist_boycotters.txt"),
-            fetch("./label_boycotters.txt"),
-          ]);
+          debugAPI("Fetching artist data from nomusicforgenocide.org");
+          
+          const response = await fetch(
+            "https://shielded-mesa-31700-647fedc50526.herokuapp.com/api/artists"
+          );
 
-          const artistText = await artistResponse.text();
-          const labelText = await labelResponse.text();
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
 
-          const artists = artistText
-            .split("\n")
-            .map((line) => line.trim())
-            .filter((line) => line && !line.startsWith("//"));
+          debugAPI("Successfully fetched data from proxy server");
+          const html = await response.text();
+          
+          // Parse the HTML to extract artist names
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, "text/html");
+          
+          // Find all divs with center alignment (same logic as music.html)
+          const artistElements = doc.querySelectorAll('div[style="text-align: center"]');
+          
+          debugAPI(`Found ${artistElements.length} artist elements in HTML`);
+          
+          const allArtists = [];
+          let count = 0;
+          
+          artistElements.forEach((artistElement) => {
+            const artistText = artistElement.textContent.trim();
+            count++;
+            
+            // Skip certain items based on the same logic as music.html
+            if (count === 1 || count === 3 || count === 5 || count === 7) {
+              debugAPI(`Skipping item ${count}: ${artistText}`);
+              return;
+            }
+            
+            if (artistText) {
+              // For items that contain multiple artists separated by " · "
+              if (artistText.includes(" · ")) {
+                const individualArtists = artistText
+                  .split(" · ")
+                  .map(name => name.trim())
+                  .filter(name => name !== "");
+                allArtists.push(...individualArtists);
+                debugAPI(`Split item ${count} into ${individualArtists.length} artists`);
+              } else {
+                allArtists.push(artistText);
+                debugAPI(`Added single artist from item ${count}: ${artistText}`);
+              }
+            }
+          });
 
-          const labels = labelText
-            .split("\n")
-            .map((line) => line.trim())
-            .filter((line) => line && !line.startsWith("//"));
+          debugAPI(`Total artists extracted: ${allArtists.length}`, {
+            sampleArtists: allArtists.slice(0, 10)
+          });
 
-          return { artists, labels };
+          // Remove duplicates and filter out empty strings
+          const uniqueArtists = [...new Set(allArtists)].filter(name => name.trim() !== "");
+          
+          debugAPI(`Unique artists after deduplication: ${uniqueArtists.length}`);
+
+          // For now, we'll use the artists for both categories since the website primarily lists artists
+          // You can modify this logic if there are separate sections for labels
+          return { 
+            artists: uniqueArtists, 
+            labels: [] // Empty for now, can be populated if there's a separate labels section
+          };
+          
         } catch (error) {
-          console.error("Error reading boycott lists:", error);
+          console.error("Error reading boycott lists from nomusicforgenocide.org:", error);
+          debugAPI("Error fetching from nomusicforgenocide.org", { 
+            error: error.message,
+            fallback: "Using empty lists"
+          });
+          
+          // Fallback to empty lists if fetch fails
           return { artists: [], labels: [] };
         }
       }
@@ -995,6 +1049,7 @@
         hideStatus();
       }
 
+      /* // Commented out label availability function
       async function checkLabelAvailability() {
         if (!isTokenValid()) {
           alert("Please authenticate with Spotify first.");
@@ -1025,6 +1080,7 @@
         updateSummary([], results);
         hideStatus();
       }
+      */
 
       async function checkAllAvailability() {
         if (!isTokenValid()) {
@@ -1032,15 +1088,15 @@
           return;
         }
 
-        showStatus("Reading boycott lists...");
-        const { artists, labels } = await readBoycottLists();
+        showStatus("Reading artist lists...");
+        const { artists } = await readBoycottLists(); // Only get artists now
 
-        if (artists.length === 0 && labels.length === 0) {
-          showStatus("No artists or labels found in boycott lists.", "error");
+        if (artists.length === 0) {
+          showStatus("No artists found in lists.", "error");
           return;
         }
 
-        // Check artists
+        // Check artists only
         const artistResults = [];
         if (artists.length > 0) {
           for (let i = 0; i < artists.length; i++) {
@@ -1053,22 +1109,10 @@
           }
         }
 
-        // Check labels
-        const labelResults = [];
-        if (labels.length > 0) {
-          for (let i = 0; i < labels.length; i++) {
-            showStatus(
-              `Checking label ${i + 1}/${labels.length}: ${labels[i]}`
-            );
-            const result = await checkSingleArtist(labels[i], accessToken);
-            labelResults.push(result);
-            await new Promise((resolve) => setTimeout(resolve, 100));
-          }
-        }
-
         displayResults(artistResults, "artist-results", "artist");
-        displayResults(labelResults, "label-results", "label");
-        updateSummary(artistResults, labelResults);
+        // Hide the label results section since we're not using it
+        document.getElementById("label-results").innerHTML = "<p>Label checking disabled</p>";
+        updateSummary(artistResults, []); // Pass empty array for labels
         hideStatus();
       }
 
