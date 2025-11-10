@@ -38,6 +38,48 @@
         text-align: center;
       }
 
+      .search-section {
+        background: #f0f8f0; /* Light green tint matching auth section */
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #28a745; /* Green border */
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      .search-section h3 {
+        margin-top: 0;
+        color: #111;
+      }
+
+      .search-input-group {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+
+      .search-input-group input {
+        flex: 1;
+        max-width: 300px;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+      }
+
+      .search-input-group input:disabled {
+        background-color: #f5f5f5;
+        color: #999;
+      }
+
+      #search-results {
+        text-align: left;
+        min-height: 50px;
+      }
+
       .controls {
         display: flex;
         gap: 15px;
@@ -251,6 +293,26 @@
         <div id="auth-status"></div>
       </div>
 
+      <div class="search-section">
+        <h3>🔍 Search Individual Artist</h3>
+        <div class="search-input-group">
+          <input
+            type="text"
+            id="artist-search-input"
+            placeholder="Enter artist name (e.g. Taylor Swift)"
+            disabled
+          />
+          <button
+            id="search-artist-btn"
+            onclick="searchSingleArtist()"
+            disabled
+          >
+            Search Artist
+          </button>
+        </div>
+        <div id="search-results"></div>
+      </div>
+
       <div class="controls">
         <button
           id="check-artists-btn"
@@ -266,9 +328,7 @@
         >
           Check Label Albums
         </button> -->
-        <button id="check-all-btn" onclick="checkAllAvailability()" disabled>
-          Check All Artists
-        </button>
+        <!-- Removed Check All Artists button -->
       </div>
 
       <div id="status" class="status" style="display: none"></div>
@@ -296,10 +356,10 @@
           <h3>🎤 Artist Results</h3>
           <div id="artist-results"></div>
         </div>
-        <div class="results-section">
+        <!-- <div class="results-section">
           <h3>🏷️ Label Results</h3>
           <div id="label-results"></div>
-        </div>
+        </div> -->
       </div>
     </div>
 
@@ -641,22 +701,34 @@
         const checkButtons = [
           "check-artists-btn",
           // "check-labels-btn", // Commented out
-          "check-all-btn",
+          // Removed "check-all-btn" reference
         ];
+
+        // Add search controls
+        const searchInput = document.getElementById("artist-search-input");
+        const searchBtn = document.getElementById("search-artist-btn");
 
         if (isTokenValid()) {
           authStatus.innerHTML =
             '<p style="color: green;">✅ Connected to Spotify</p><button onclick="testSpotifyApp()" style="font-size: 12px; padding: 5px;">Test Token</button>';
           authBtn.textContent = "Reconnect to Spotify";
+          
+          // Enable all buttons and search input
           checkButtons.forEach((id) => {
             document.getElementById(id).disabled = false;
           });
+          searchInput.disabled = false;
+          searchBtn.disabled = false;
         } else {
           authStatus.innerHTML = '<p style="color: red;">❌ Not connected</p>';
           authBtn.textContent = "Connect to Spotify";
+          
+          // Disable all buttons and search input
           checkButtons.forEach((id) => {
             document.getElementById(id).disabled = true;
           });
+          searchInput.disabled = true;
+          searchBtn.disabled = true;
         }
       }
 
@@ -676,7 +748,7 @@
       async function readBoycottLists() {
         try {
           debugAPI("Fetching artist data from nomusicforgenocide.org");
-          
+
           const response = await fetch(
             "https://shielded-mesa-31700-647fedc50526.herokuapp.com/api/artists"
           );
@@ -687,68 +759,80 @@
 
           debugAPI("Successfully fetched data from proxy server");
           const html = await response.text();
-          
+
           // Parse the HTML to extract artist names
           const parser = new DOMParser();
           const doc = parser.parseFromString(html, "text/html");
-          
+
           // Find all divs with center alignment (same logic as music.html)
-          const artistElements = doc.querySelectorAll('div[style="text-align: center"]');
-          
+          const artistElements = doc.querySelectorAll(
+            'div[style="text-align: center"]'
+          );
+
           debugAPI(`Found ${artistElements.length} artist elements in HTML`);
-          
+
           const allArtists = [];
           let count = 0;
-          
+
           artistElements.forEach((artistElement) => {
             const artistText = artistElement.textContent.trim();
             count++;
-            
+
             // Skip certain items based on the same logic as music.html
             if (count === 1 || count === 3 || count === 5 || count === 7) {
               debugAPI(`Skipping item ${count}: ${artistText}`);
               return;
             }
-            
+
             if (artistText) {
               // For items that contain multiple artists separated by " · "
               if (artistText.includes(" · ")) {
                 const individualArtists = artistText
                   .split(" · ")
-                  .map(name => name.trim())
-                  .filter(name => name !== "");
+                  .map((name) => name.trim())
+                  .filter((name) => name !== "");
                 allArtists.push(...individualArtists);
-                debugAPI(`Split item ${count} into ${individualArtists.length} artists`);
+                debugAPI(
+                  `Split item ${count} into ${individualArtists.length} artists`
+                );
               } else {
                 allArtists.push(artistText);
-                debugAPI(`Added single artist from item ${count}: ${artistText}`);
+                debugAPI(
+                  `Added single artist from item ${count}: ${artistText}`
+                );
               }
             }
           });
 
           debugAPI(`Total artists extracted: ${allArtists.length}`, {
-            sampleArtists: allArtists.slice(0, 10)
+            sampleArtists: allArtists.slice(0, 10),
           });
 
           // Remove duplicates and filter out empty strings
-          const uniqueArtists = [...new Set(allArtists)].filter(name => name.trim() !== "");
-          
-          debugAPI(`Unique artists after deduplication: ${uniqueArtists.length}`);
+          const uniqueArtists = [...new Set(allArtists)].filter(
+            (name) => name.trim() !== ""
+          );
+
+          debugAPI(
+            `Unique artists after deduplication: ${uniqueArtists.length}`
+          );
 
           // For now, we'll use the artists for both categories since the website primarily lists artists
           // You can modify this logic if there are separate sections for labels
-          return { 
-            artists: uniqueArtists, 
-            labels: [] // Empty for now, can be populated if there's a separate labels section
+          return {
+            artists: uniqueArtists,
+            labels: [], // Empty for now, can be populated if there's a separate labels section
           };
-          
         } catch (error) {
-          console.error("Error reading boycott lists from nomusicforgenocide.org:", error);
-          debugAPI("Error fetching from nomusicforgenocide.org", { 
+          console.error(
+            "Error reading boycott lists from nomusicforgenocide.org:",
+            error
+          );
+          debugAPI("Error fetching from nomusicforgenocide.org", {
             error: error.message,
-            fallback: "Using empty lists"
+            fallback: "Using empty lists",
           });
-          
+
           // Fallback to empty lists if fetch fails
           return { artists: [], labels: [] };
         }
@@ -836,7 +920,7 @@
       // Main checking functions
       async function checkSingleArtist(artistName, token) {
         debugAPI(`Starting check for artist: ${artistName}`);
-        
+
         const artist = await searchSpotifyArtist(artistName, token);
         if (!artist) {
           debugAPI(`Artist not found on Spotify: ${artistName}`);
@@ -876,7 +960,8 @@
         });
 
         const availableAlbums = albums.filter((album) => {
-          const hasTargetMarket = album.available_markets && album.available_markets.includes("IL");
+          const hasTargetMarket =
+            album.available_markets && album.available_markets.includes("IL");
           debugAPI(`Album availability check: ${album.name}`, {
             hasMarkets: !!album.available_markets,
             marketCount: album.available_markets?.length || 0,
@@ -884,7 +969,7 @@
             hasUS: album.available_markets?.includes("US"),
             hasDE: album.available_markets?.includes("DE"),
             hasGB: album.available_markets?.includes("GB"),
-            sampleMarkets: album.available_markets?.slice(0, 20)
+            sampleMarkets: album.available_markets?.slice(0, 20),
           });
           return hasTargetMarket;
         });
@@ -892,8 +977,10 @@
         // Determine availability status
         const totalAlbums = albums.length;
         const availableCount = availableAlbums.length;
-        const fullyAvailable = availableCount === totalAlbums && totalAlbums > 0;
-        const partiallyAvailable = availableCount > 0 && availableCount < totalAlbums;
+        const fullyAvailable =
+          availableCount === totalAlbums && totalAlbums > 0;
+        const partiallyAvailable =
+          availableCount > 0 && availableCount < totalAlbums;
         const notAvailable = availableCount === 0;
 
         const result = {
@@ -915,7 +1002,7 @@
           fullyAvailable: result.fullyAvailable,
           partiallyAvailable: result.partiallyAvailable,
           notAvailable: result.notAvailable,
-          spotifyName: result.spotifyName
+          spotifyName: result.spotifyName,
         });
 
         return result;
@@ -932,21 +1019,24 @@
 
         results.forEach((result) => {
           const div = document.createElement("div");
-          
+
           // Determine the CSS class and status badge based on availability
           let cssClass, statusBadge;
-          
+
           if (result.partiallyAvailable) {
             cssClass = "partially-available";
-            statusBadge = '<span class="partially-available-badge">⚠️ Partially Available</span>';
+            statusBadge =
+              '<span class="partially-available-badge">⚠️ Partially Available</span>';
           } else if (result.availableInRegion) {
             cssClass = "available";
-            statusBadge = '<span class="available-badge">⚠️ Fully Available</span>';
+            statusBadge =
+              '<span class="available-badge">⚠️ Fully Available</span>';
           } else {
             cssClass = "unavailable";
-            statusBadge = '<span class="unavailable-badge">✅ Not Available</span>';
+            statusBadge =
+              '<span class="unavailable-badge">✅ Not Available</span>';
           }
-          
+
           div.className = `artist-result ${cssClass}`;
 
           div.innerHTML = `
@@ -1049,6 +1139,56 @@
         hideStatus();
       }
 
+      // Search function for individual artists
+      async function searchSingleArtist() {
+        if (!isTokenValid()) {
+          alert("Please authenticate with Spotify first.");
+          return;
+        }
+
+        const input = document.getElementById("artist-search-input");
+        const artistName = input.value.trim();
+
+        if (!artistName) {
+          alert("Please enter an artist name to search.");
+          return;
+        }
+
+        debugAPI(`Searching for individual artist: ${artistName}`);
+        showStatus(`Searching for ${artistName}...`);
+
+        try {
+          const result = await checkSingleArtist(artistName, accessToken);
+          
+          // Display the result in the search results section
+          displayResults([result], "search-results", "search");
+          
+          showStatus(`Search completed for ${artistName}`, "success");
+          setTimeout(hideStatus, 3000);
+          
+          // Clear the search input
+          input.value = "";
+          
+        } catch (error) {
+          logError("individual artist search", error, { artistName });
+          showStatus(`Error searching for ${artistName}: ${error.message}`, "error");
+        }
+      }
+
+      // Add Enter key support for search input
+      document.addEventListener("DOMContentLoaded", function () {
+        // ...existing code...
+        
+        // Add Enter key listener to search input
+        const searchInput = document.getElementById("artist-search-input");
+        searchInput.addEventListener("keypress", function(event) {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            searchSingleArtist();
+          }
+        });
+      });
+
       /* // Commented out label availability function
       async function checkLabelAvailability() {
         if (!isTokenValid()) {
@@ -1081,40 +1221,6 @@
         hideStatus();
       }
       */
-
-      async function checkAllAvailability() {
-        if (!isTokenValid()) {
-          alert("Please authenticate with Spotify first.");
-          return;
-        }
-
-        showStatus("Reading artist lists...");
-        const { artists } = await readBoycottLists(); // Only get artists now
-
-        if (artists.length === 0) {
-          showStatus("No artists found in lists.", "error");
-          return;
-        }
-
-        // Check artists only
-        const artistResults = [];
-        if (artists.length > 0) {
-          for (let i = 0; i < artists.length; i++) {
-            showStatus(
-              `Checking artist ${i + 1}/${artists.length}: ${artists[i]}`
-            );
-            const result = await checkSingleArtist(artists[i], accessToken);
-            artistResults.push(result);
-            await new Promise((resolve) => setTimeout(resolve, 100));
-          }
-        }
-
-        displayResults(artistResults, "artist-results", "artist");
-        // Hide the label results section since we're not using it
-        document.getElementById("label-results").innerHTML = "<p>Label checking disabled</p>";
-        updateSummary(artistResults, []); // Pass empty array for labels
-        hideStatus();
-      }
 
       // Initialize
       document.addEventListener("DOMContentLoaded", function () {
