@@ -142,9 +142,7 @@
       }
 
       .results-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 30px;
+        display: block; /* Changed from grid to block */
         margin-top: 30px;
       }
 
@@ -154,6 +152,7 @@
         border-radius: 8px;
         border: 1px solid #eee; /* Light border like music.html */
         border-left: 4px solid #28a745; /* Green accent border */
+        width: 100%; /* Take full width */
       }
 
       .results-section h3 {
@@ -280,7 +279,7 @@
   </head>
   <body>
     <div class="container">
-      <h1>Album Availability Checker</h1>
+      <h1>Availability Checker</h1>
 
       <div class="auth-section">
         <h3>Spotify Authentication Required</h3>
@@ -294,12 +293,12 @@
       </div>
 
       <div class="search-section">
-        <h3>🔍 Search Individual Artist</h3>
+        <h3>Search for Artist</h3>
         <div class="search-input-group">
           <input
             type="text"
             id="artist-search-input"
-            placeholder="Enter artist name (e.g. Taylor Swift)"
+            placeholder="Enter artist name"
             disabled
           />
           <button
@@ -307,7 +306,7 @@
             onclick="searchSingleArtist()"
             disabled
           >
-            Search Artist
+            Search
           </button>
         </div>
         <div id="search-results"></div>
@@ -319,7 +318,7 @@
           onclick="checkArtistAvailability()"
           disabled
         >
-          Check Artist Albums
+          Check all Artists (this will take a while)
         </button>
         <!-- <button
           id="check-labels-btn"
@@ -353,7 +352,7 @@
 
       <div class="results-container">
         <div class="results-section">
-          <h3>🎤 Artist Results</h3>
+          <h3>Artist</h3>
           <div id="artist-results"></div>
         </div>
         <!-- <div class="results-section">
@@ -712,7 +711,7 @@
           authStatus.innerHTML =
             '<p style="color: green;">✅ Connected to Spotify</p><button onclick="testSpotifyApp()" style="font-size: 12px; padding: 5px;">Test Token</button>';
           authBtn.textContent = "Reconnect to Spotify";
-          
+
           // Enable all buttons and search input
           checkButtons.forEach((id) => {
             document.getElementById(id).disabled = false;
@@ -722,7 +721,7 @@
         } else {
           authStatus.innerHTML = '<p style="color: red;">❌ Not connected</p>';
           authBtn.textContent = "Connect to Spotify";
-          
+
           // Disable all buttons and search input
           checkButtons.forEach((id) => {
             document.getElementById(id).disabled = true;
@@ -1159,29 +1158,31 @@
 
         try {
           const result = await checkSingleArtist(artistName, accessToken);
-          
+
           // Display the result in the search results section
           displayResults([result], "search-results", "search");
-          
+
           showStatus(`Search completed for ${artistName}`, "success");
           setTimeout(hideStatus, 3000);
-          
+
           // Clear the search input
           input.value = "";
-          
         } catch (error) {
           logError("individual artist search", error, { artistName });
-          showStatus(`Error searching for ${artistName}: ${error.message}`, "error");
+          showStatus(
+            `Error searching for ${artistName}: ${error.message}`,
+            "error"
+          );
         }
       }
 
       // Add Enter key support for search input
       document.addEventListener("DOMContentLoaded", function () {
         // ...existing code...
-        
+
         // Add Enter key listener to search input
         const searchInput = document.getElementById("artist-search-input");
-        searchInput.addEventListener("keypress", function(event) {
+        searchInput.addEventListener("keypress", function (event) {
           if (event.key === "Enter") {
             event.preventDefault();
             searchSingleArtist();
