@@ -9,7 +9,7 @@
         font-family: Arial, sans-serif;
         margin: 0;
         padding: 20px;
-        background-color: green; /* Match music.html green background */
+        background-color: red; /* Changed from green to red */
         color: #222; /* Dark text like music.html */
       }
 
@@ -152,7 +152,7 @@
         border-radius: 8px;
         border: 1px solid #eee; /* Light border like music.html */
         border-left: 4px solid #28a745; /* Green accent border */
-        width: 100%; /* Take full width */
+        width: 90%; /* Take full width */
       }
 
       .results-section h3 {
@@ -1007,6 +1007,131 @@
         return result;
       }
 
+      async function checkArtistAvailability() {
+        if (!isTokenValid()) {
+          alert("Please authenticate with Spotify first.");
+          return;
+        }
+
+        showStatus("Reading artist boycott list...");
+        const { artists } = await readBoycottLists();
+
+        if (artists.length === 0) {
+          showStatus("No artists found in boycott list.", "error");
+          return;
+        }
+
+        // Clear previous results and show initial status
+        document.getElementById("artist-results").innerHTML = "";
+        document.getElementById("summary").style.display = "none";
+        
+        showStatus(`Checking ${artists.length} artists...`);
+        const results = [];
+
+        for (let i = 0; i < artists.length; i++) {
+          showStatus(
+            `Checking artist ${i + 1}/${artists.length}: ${artists[i]}`
+          );
+          
+          const result = await checkSingleArtist(artists[i], accessToken);
+          results.push(result);
+
+          // Display this single result immediately
+          displaySingleResult(result, "artist-results");
+          
+          // Update summary with current results
+          updateSummary(results, []);
+
+          // Add delay to avoid rate limiting
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        // Final status update
+        showStatus(`Completed checking ${artists.length} artists`, "success");
+        setTimeout(hideStatus, 3000);
+      }
+
+      // New function to display a single result as it's processed
+      function displaySingleResult(result, containerId) {
+        const container = document.getElementById(containerId);
+        
+        const div = document.createElement("div");
+
+        // Determine the CSS class and status badge based on availability
+        let cssClass, statusBadge;
+
+        if (result.partiallyAvailable) {
+          cssClass = "partially-available";
+          statusBadge =
+            '<span class="partially-available-badge">⚠️ Partially Available</span>';
+        } else if (result.availableInRegion) {
+          cssClass = "available";
+          statusBadge =
+            '<span class="available-badge">⚠️ Fully Available</span>';
+        } else {
+          cssClass = "unavailable";
+          statusBadge =
+            '<span class="unavailable-badge">✅ Not Available</span>';
+        }
+
+        div.className = `artist-result ${cssClass}`;
+
+        div.innerHTML = `
+                  <div class="artist-name">
+                      ${result.name}${statusBadge}
+                      ${
+                        result.found && result.spotifyName !== result.name
+                          ? ` (${result.spotifyName})`
+                          : ""
+                      }
+                  </div>
+                  ${
+                    !result.found
+                      ? "<p><em>Not found on Spotify</em></p>"
+                      : ""
+                  }
+                  ${
+                    result.albums.length > 0
+                      ? `
+                      <details>
+                          <summary>${result.albums.length} album(s) found, ${
+                        result.availableAlbums.length
+                      } available in target region</summary>
+                          <ul class="album-list">
+                              ${result.albums
+                                .map(
+                                  (album) => `
+                                  <li>
+                                      ${
+                                        album.name
+                                      } (${album.release_date.substring(
+                                    0,
+                                    4
+                                  )})
+                                      ${
+                                        album.available_markets &&
+                                        album.available_markets.includes("IL")
+                                          ? '<span class="available-badge">Available</span>'
+                                          : '<span class="unavailable-badge">Not Available</span>'
+                                      }
+                                  </li>
+                              `
+                                )
+                                .join("")}
+                          </ul>
+                      </details>
+                  `
+                      : ""
+                  }
+              `;
+
+        // Append the new result to the container
+        container.appendChild(div);
+        
+        // Scroll to the bottom to show the latest result
+        div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
+
       function displayResults(results, containerId, type) {
         const container = document.getElementById(containerId);
         container.innerHTML = "";
@@ -1103,39 +1228,6 @@
         document.getElementById("unavailable-count").textContent =
           unavailableCount;
         document.getElementById("summary").style.display = "block";
-      }
-
-      async function checkArtistAvailability() {
-        if (!isTokenValid()) {
-          alert("Please authenticate with Spotify first.");
-          return;
-        }
-
-        showStatus("Reading artist boycott list...");
-        const { artists } = await readBoycottLists();
-
-        if (artists.length === 0) {
-          showStatus("No artists found in boycott list.", "error");
-          return;
-        }
-
-        showStatus(`Checking ${artists.length} artists...`);
-        const results = [];
-
-        for (let i = 0; i < artists.length; i++) {
-          showStatus(
-            `Checking artist ${i + 1}/${artists.length}: ${artists[i]}`
-          );
-          const result = await checkSingleArtist(artists[i], accessToken);
-          results.push(result);
-
-          // Add delay to avoid rate limiting
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        }
-
-        displayResults(results, "artist-results", "artist");
-        updateSummary(results, []);
-        hideStatus();
       }
 
       // Search function for individual artists
