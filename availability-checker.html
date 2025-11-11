@@ -245,6 +245,10 @@
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       }
 
+      .summary h3 {
+        color: white; /* Make summary h3 text white */
+      }
+
       .summary-stats {
         display: flex;
         justify-content: space-around;
@@ -324,10 +328,10 @@
 
       <div class="results-container">
         <div class="results-section">
-          <h3>Artists</h3>
-          
-          <!-- Moved check all artists button here -->
-          <div class="controls" style="justify-content: center; margin-bottom: 20px;">
+          <div
+            class="controls"
+            style="justify-content: center; margin-bottom: 20px"
+          >
             <button
               id="check-artists-btn"
               onclick="checkArtistAvailability()"
@@ -337,8 +341,11 @@
             </button>
           </div>
 
-          <!-- Moved availability summary here -->
-          <div id="summary" class="summary" style="display: none; margin-bottom: 20px;">
+          <div
+            id="summary"
+            class="summary"
+            style="display: none; margin-bottom: 20px"
+          >
             <h3>Availability Summary</h3>
             <div class="summary-stats">
               <div class="stat" onclick="filterResults('all')">
@@ -350,7 +357,9 @@
                 <span class="stat-label">Fully Available</span>
               </div>
               <div class="stat" onclick="filterResults('partially-available')">
-                <span id="partially-available-count" class="stat-number">0</span>
+                <span id="partially-available-count" class="stat-number"
+                  >0</span
+                >
                 <span class="stat-label">Partially Available</span>
               </div>
               <div class="stat" onclick="filterResults('not-available')">
@@ -443,19 +452,6 @@
 
         // Display filtered results
         displayResults(filteredResults, "artist-results", "artist");
-
-        // Update the results section title to show current filter
-        const resultsTitle = document.querySelector(".results-section h3");
-        let titleText = "Artists";
-        if (filterType !== "all") {
-          const filterLabels = {
-            "fully-available": "Fully Available Artists",
-            "partially-available": "Partially Available Artists",
-            "not-available": "Not Available Artists",
-          };
-          titleText = filterLabels[filterType] || "Artists";
-        }
-        resultsTitle.textContent = titleText;
       }
 
       // Token management functions
@@ -740,24 +736,24 @@
           }
 
           const data = await response.json();
-          
+
           if (data.artists.items.length === 0) {
             return null;
           }
 
           // Normalize the search term for case-insensitive comparison
           const normalizedSearchName = artistName.toLowerCase().trim();
-          
+
           // Check each result for a case-insensitive name match
           for (const artist of data.artists.items) {
             const normalizedArtistName = artist.name.toLowerCase().trim();
-            
+
             // If we find an exact case-insensitive match, return it
             if (normalizedArtistName === normalizedSearchName) {
               return artist;
             }
           }
-          
+
           // If no exact match found, return the first result (most relevant)
           return data.artists.items[0];
         } catch (error) {
