@@ -58,6 +58,7 @@
         justify-content: center;
         align-items: center;
         flex-wrap: wrap;
+        margin-bottom: 20px;
       }
 
       .search-input-group input {
@@ -301,6 +302,8 @@
         <div id="auth-status"></div>
       </div>
 
+      <div id="status" class="status" style="display: none"></div>
+
       <div class="search-section">
         <h3>Search for Artist</h3>
         <div class="search-input-group">
@@ -321,11 +324,12 @@
         <div id="search-results"></div>
       </div>
 
-      <div id="status" class="status" style="display: none"></div>
-
       <div class="results-container">
         <div class="results-section">
-          <div class="controls" style="justify-content: center">
+          <div
+            class="controls"
+            style="justify-content: center; margin-bottom: 20px"
+          >
             <button
               id="check-artists-btn"
               onclick="checkArtistAvailability()"
