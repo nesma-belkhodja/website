@@ -273,6 +273,17 @@
         border: 2px solid rgba(255, 255, 255, 0.5);
       }
 
+      .stat-number {
+        font-size: 24px;
+        font-weight: bold;
+        display: block;
+      }
+
+      .stat-label {
+        font-size: 14px;
+        opacity: 0.9;
+      }
+
       @media (max-width: 768px) {
         .results-container {
           grid-template-columns: 1fr;
@@ -281,6 +292,11 @@
         .controls {
           flex-direction: column;
           align-items: center;
+        }
+
+        .summary-stats {
+          flex-direction: column;
+          gap: 10px;
         }
       }
     </style>
@@ -301,12 +317,12 @@
       </div>
 
       <div class="search-section">
-        <h3>Search for Artist</h3>
+        <h3>🔍 Search Individual Artist</h3>
         <div class="search-input-group">
           <input
             type="text"
             id="artist-search-input"
-            placeholder="Enter artist name"
+            placeholder="Enter artist name (e.g. Taylor Swift)"
             disabled
           />
           <button
@@ -314,64 +330,54 @@
             onclick="searchSingleArtist()"
             disabled
           >
-            Search
+            Search Artist
           </button>
         </div>
         <div id="search-results"></div>
       </div>
 
-      <div class="controls">
-        <button
-          id="check-artists-btn"
-          onclick="checkArtistAvailability()"
-          disabled
-        >
-          Check all Artists (this will take a while)
-        </button>
-        <!-- <button
-          id="check-labels-btn"
-          onclick="checkLabelAvailability()"
-          disabled
-        >
-          Check Label Albums
-        </button> -->
-        <!-- Removed Check All Artists button -->
-      </div>
-
       <div id="status" class="status" style="display: none"></div>
-
-      <div id="summary" class="summary" style="display: none">
-        <h3>Availability Summary</h3>
-        <div class="summary-stats">
-          <div class="stat" onclick="filterResults('all')">
-            <span id="total-artists" class="stat-number">0</span>
-            <span class="stat-label">Total Artists</span>
-          </div>
-          <div class="stat" onclick="filterResults('fully-available')">
-            <span id="available-count" class="stat-number">0</span>
-            <span class="stat-label">Fully Available</span>
-          </div>
-          <div class="stat" onclick="filterResults('partially-available')">
-            <span id="partially-available-count" class="stat-number">0</span>
-            <span class="stat-label">Partially Available</span>
-          </div>
-          <div class="stat" onclick="filterResults('not-available')">
-            <span id="unavailable-count" class="stat-number">0</span>
-            <span class="stat-label">Not Available</span>
-          </div>
-        </div>
-      </div>
 
       <div class="results-container">
         <div class="results-section">
-          <h3>Artists</h3>
+          <h3>🎤 Artists</h3>
+          
+          <div class="controls" style="justify-content: left; margin-bottom: 20px;">
+            <button
+              id="check-artists-btn"
+              onclick="checkArtistAvailability()"
+              disabled
+            >
+              Check All Artists
+            </button>
+          </div>
+
+          <div id="summary" class="summary" style="display: none; margin-bottom: 20px;">
+            <h3>Availability Summary</h3>
+            <div class="summary-stats">
+              <div class="stat" onclick="filterResults('all')">
+                <span id="total-artists" class="stat-number">0</span>
+                <span class="stat-label">Total Artists</span>
+              </div>
+              <div class="stat" onclick="filterResults('fully-available')">
+                <span id="available-count" class="stat-number">0</span>
+                <span class="stat-label">Fully Available</span>
+              </div>
+              <div class="stat" onclick="filterResults('partially-available')">
+                <span id="partially-available-count" class="stat-number">0</span>
+                <span class="stat-label">Partially Available</span>
+              </div>
+              <div class="stat" onclick="filterResults('not-available')">
+                <span id="unavailable-count" class="stat-number">0</span>
+                <span class="stat-label">Not Available</span>
+              </div>
+            </div>
+          </div>
+
           <div id="artist-results"></div>
         </div>
-        <!-- <div class="results-section">
-          <h3>🏷️ Label Results</h3>
-          <div id="label-results"></div>
-        </div> -->
       </div>
+
     </div>
 
     <script>
