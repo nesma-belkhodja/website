@@ -147,17 +147,18 @@
       }
 
       .results-section {
-        background: #f8f9fa;
+        background: #f0f8f0; /* Light green tint matching auth and search sections */
         padding: 20px;
         border-radius: 8px;
-        border: 1px solid #eee; /* Light border like music.html */
-        border-left: 4px solid #28a745; /* Green accent border */
-        margin: 20px;
+        border: 1px solid #28a745; /* Green border matching other sections */
+        margin-bottom: 30px;
+        text-align: left; /* Keep left alignment for results content */
       }
 
       .results-section h3 {
         margin-top: 0;
         color: #111; /* Dark color like music.html */
+        text-align: center; /* Center the heading like other sections */
       }
 
       .artist-result {
@@ -708,7 +709,7 @@
       async function searchSpotifyArtist(artistName, token) {
         const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(
           artistName
-        )}&type=artist&limit=1`;
+        )}&type=artist&limit=4`; // Increased limit to 4
         const headers = { Authorization: `Bearer ${token}` };
 
         try {
@@ -719,8 +720,26 @@
           }
 
           const data = await response.json();
+          
+          if (data.artists.items.length === 0) {
+            return null;
+          }
 
-          return data.artists.items.length > 0 ? data.artists.items[0] : null;
+          // Normalize the search term for case-insensitive comparison
+          const normalizedSearchName = artistName.toLowerCase().trim();
+          
+          // Check each result for a case-insensitive name match
+          for (const artist of data.artists.items) {
+            const normalizedArtistName = artist.name.toLowerCase().trim();
+            
+            // If we find an exact case-insensitive match, return it
+            if (normalizedArtistName === normalizedSearchName) {
+              return artist;
+            }
+          }
+          
+          // If no exact match found, return the first result (most relevant)
+          return data.artists.items[0];
         } catch (error) {
           console.error(`[ERROR] searching for artist ${artistName}:`, error, {
             url,
@@ -872,24 +891,24 @@
       function displaySingleResult(result, containerId) {
         // Check if we should display this result based on current filter
         let shouldDisplay = false;
-        
-        switch(currentFilter) {
-          case 'all':
+
+        switch (currentFilter) {
+          case "all":
             shouldDisplay = true;
             break;
-          case 'fully-available':
+          case "fully-available":
             shouldDisplay = result.fullyAvailable;
             break;
-          case 'partially-available':
+          case "partially-available":
             shouldDisplay = result.partiallyAvailable;
             break;
-          case 'not-available':
+          case "not-available":
             shouldDisplay = result.notAvailable;
             break;
           default:
             shouldDisplay = true;
         }
-        
+
         // Only display if it matches the current filter
         if (!shouldDisplay) {
           return;
