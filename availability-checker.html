@@ -152,8 +152,7 @@
         border-radius: 8px;
         border: 1px solid #eee; /* Light border like music.html */
         border-left: 4px solid #28a745; /* Green accent border */
-        width: 100%; /* Take full width */
-        padding: 20px;
+        margin: 20px;
       }
 
       .results-section h3 {
@@ -871,6 +870,31 @@
 
       // New function to display a single result as it's processed
       function displaySingleResult(result, containerId) {
+        // Check if we should display this result based on current filter
+        let shouldDisplay = false;
+        
+        switch(currentFilter) {
+          case 'all':
+            shouldDisplay = true;
+            break;
+          case 'fully-available':
+            shouldDisplay = result.fullyAvailable;
+            break;
+          case 'partially-available':
+            shouldDisplay = result.partiallyAvailable;
+            break;
+          case 'not-available':
+            shouldDisplay = result.notAvailable;
+            break;
+          default:
+            shouldDisplay = true;
+        }
+        
+        // Only display if it matches the current filter
+        if (!shouldDisplay) {
+          return;
+        }
+
         const container = document.getElementById(containerId);
 
         const div = document.createElement("div");
