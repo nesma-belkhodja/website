@@ -152,7 +152,8 @@
         border-radius: 8px;
         border: 1px solid #eee; /* Light border like music.html */
         border-left: 4px solid #28a745; /* Green accent border */
-        width: 95%; /* Take full width */
+        width: 100%; /* Take full width */
+        padding: 20px;
       }
 
       .results-section h3 {
@@ -252,17 +253,24 @@
 
       .stat {
         text-align: center;
+        cursor: pointer; /* Make stats clickable */
+        padding: 10px;
+        border-radius: 6px;
+        transition: background-color 0.3s;
       }
 
-      .stat-number {
-        font-size: 24px;
-        font-weight: bold;
-        display: block;
+      .stat:hover {
+        background-color: rgba(255, 255, 255, 0.2); /* Lighter on hover */
       }
 
-      .stat-label {
-        font-size: 14px;
-        opacity: 0.9;
+      .stat.active {
+        background-color: rgba(
+          255,
+          255,
+          255,
+          0.3
+        ); /* Highlight active filter */
+        border: 2px solid rgba(255, 255, 255, 0.5);
       }
 
       @media (max-width: 768px) {
@@ -335,15 +343,19 @@
       <div id="summary" class="summary" style="display: none">
         <h3>Availability Summary</h3>
         <div class="summary-stats">
-          <div class="stat">
+          <div class="stat" onclick="filterResults('all')">
             <span id="total-artists" class="stat-number">0</span>
-            <span class="stat-label">Total Artists/Labels</span>
+            <span class="stat-label">Total Artists</span>
           </div>
-          <div class="stat">
+          <div class="stat" onclick="filterResults('fully-available')">
             <span id="available-count" class="stat-number">0</span>
-            <span class="stat-label">Available</span>
+            <span class="stat-label">Fully Available</span>
           </div>
-          <div class="stat">
+          <div class="stat" onclick="filterResults('partially-available')">
+            <span id="partially-available-count" class="stat-number">0</span>
+            <span class="stat-label">Partially Available</span>
+          </div>
+          <div class="stat" onclick="filterResults('not-available')">
             <span id="unavailable-count" class="stat-number">0</span>
             <span class="stat-label">Not Available</span>
           </div>
@@ -352,7 +364,7 @@
 
       <div class="results-container">
         <div class="results-section">
-          <h3>Artist</h3>
+          <h3>Artists</h3>
           <div id="artist-results"></div>
         </div>
         <!-- <div class="results-section">
@@ -374,80 +386,60 @@
       let accessToken = null;
       let tokenExpirationTime = null;
 
-      // Add comprehensive debugging
-      function debugAuth(message, data = {}) {
-        console.log(`[AUTH DEBUG] ${message}`, data);
-        // Also show in UI for better visibility
-        const authStatus = document.getElementById("auth-status");
-        if (authStatus) {
-          authStatus.innerHTML += `<div style="font-size: 12px; color: #666; margin: 5px 0;">${message}</div>`;
+      let allResults = []; // Global variable to store all results for filtering
+      let currentFilter = "all"; // Track current filter state
+
+      // Filter results based on availability status
+      function filterResults(filterType) {
+        // Update active filter state
+        currentFilter = filterType;
+
+        // Update visual state of summary stats
+        document.querySelectorAll(".stat").forEach((stat) => {
+          stat.classList.remove("active");
+        });
+
+        // Add active class to clicked stat
+        event.target.closest(".stat").classList.add("active");
+
+        let filteredResults = [];
+
+        switch (filterType) {
+          case "all":
+            filteredResults = allResults;
+            break;
+          case "fully-available":
+            filteredResults = allResults.filter((r) => r.fullyAvailable);
+            break;
+          case "partially-available":
+            filteredResults = allResults.filter((r) => r.partiallyAvailable);
+            break;
+          case "not-available":
+            filteredResults = allResults.filter((r) => r.notAvailable);
+            break;
+          default:
+            filteredResults = allResults;
         }
-      }
 
-      // Add API request logging
-      function debugAPI(message, data = {}) {
-        console.log(`[API DEBUG] ${message}`, data);
-      }
+        // Display filtered results
+        displayResults(filteredResults, "artist-results", "artist");
 
-      function logRequest(url, headers, method = "GET") {
-        debugAPI(`Making ${method} request to: ${url}`, { headers });
-      }
-
-      function logResponse(url, response, data = null) {
-        debugAPI(`Response from ${url}`, {
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok,
-          headers: Object.fromEntries(response.headers.entries()),
-          data: data,
-        });
-      }
-
-      function logError(operation, error, context = {}) {
-        console.error(`[ERROR] ${operation}:`, error, context);
-        debugAPI(`Error in ${operation}`, {
-          error: error.message,
-          stack: error.stack,
-          context,
-        });
-      }
-
-      // PKCE helper functions
-      function generateRandomString(length) {
-        const possible =
-          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        const values = crypto.getRandomValues(new Uint8Array(length));
-        return values.reduce(
-          (acc, x) => acc + possible[x % possible.length],
-          ""
-        );
-      }
-
-      async function sha256(plain) {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(plain);
-        return window.crypto.subtle.digest("SHA-256", data);
-      }
-
-      function base64encode(input) {
-        return btoa(String.fromCharCode(...new Uint8Array(input)))
-          .replace(/=/g, "")
-          .replace(/\+/g, "-")
-          .replace(/\//g, "_");
-      }
-
-      async function generateCodeChallenge(codeVerifier) {
-        const hashed = await sha256(codeVerifier);
-        return base64encode(hashed);
+        // Update the results section title to show current filter
+        const resultsTitle = document.querySelector(".results-section h3");
+        let titleText = "Artists";
+        if (filterType !== "all") {
+          const filterLabels = {
+            "fully-available": "Fully Available Artists",
+            "partially-available": "Partially Available Artists",
+            "not-available": "Not Available Artists",
+          };
+          titleText = filterLabels[filterType] || "Artists";
+        }
+        resultsTitle.textContent = titleText;
       }
 
       // Token management functions
       function saveToken(token, expiresIn, refreshToken = null) {
-        debugAuth("Saving token", {
-          token: token.substring(0, 20) + "...",
-          expiresIn,
-          hasRefreshToken: !!refreshToken,
-        });
         accessToken = token;
         tokenExpirationTime = Date.now() + expiresIn * 1000;
         localStorage.setItem("spotifyToken", token);
@@ -458,36 +450,24 @@
         if (refreshToken) {
           localStorage.setItem("spotifyRefreshToken", refreshToken);
         }
-        debugAuth("Token saved successfully");
       }
 
       function loadToken() {
         const token = localStorage.getItem("spotifyToken");
         const expiration = localStorage.getItem("spotifyTokenExpiration");
 
-        debugAuth("Loading token from storage", {
-          hasToken: !!token,
-          expiration: expiration
-            ? new Date(parseInt(expiration)).toISOString()
-            : "none",
-          currentTime: new Date().toISOString(),
-        });
-
         if (token && expiration && Date.now() < parseInt(expiration)) {
           accessToken = token;
           tokenExpirationTime = parseInt(expiration);
-          debugAuth("Valid token loaded from storage");
           return token;
         }
 
         // Clear expired token
-        debugAuth("Token expired or invalid, clearing");
         clearToken();
         return null;
       }
 
       function clearToken() {
-        debugAuth("Clearing token");
         accessToken = null;
         tokenExpirationTime = null;
         localStorage.removeItem("spotifyToken");
@@ -499,57 +479,11 @@
           accessToken &&
           tokenExpirationTime &&
           Date.now() < tokenExpirationTime;
-        debugAuth("Token validity check", {
-          hasAccessToken: !!accessToken,
-          hasExpirationTime: !!tokenExpirationTime,
-          isExpired: tokenExpirationTime
-            ? Date.now() >= tokenExpirationTime
-            : "no expiration",
-          valid,
-        });
         return valid;
-      }
-
-      // Add a test function to debug Spotify app configuration
-      function testSpotifyApp() {
-        debugAuth("Testing Spotify app configuration");
-        debugAuth("Client ID: " + CLIENT_ID);
-        debugAuth("Redirect URI: " + REDIRECT_URI);
-
-        // Try to make a simple request to test the token
-        if (accessToken) {
-          fetch("https://api.spotify.com/v1/me", {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          })
-            .then((response) => {
-              debugAuth("Token test response", {
-                status: response.status,
-                ok: response.ok,
-              });
-              if (!response.ok) {
-                if (response.status === 401) {
-                  debugAuth("Token is invalid or expired");
-                  clearToken();
-                  updateAuthStatus();
-                }
-              }
-              return response.json();
-            })
-            .then((data) => {
-              debugAuth("Token test data", data);
-            })
-            .catch((error) => {
-              debugAuth("Token test error", { error: error.message });
-            });
-        }
       }
 
       // Authentication functions
       async function authenticateSpotify() {
-        debugAuth("Starting Spotify authentication with PKCE");
-
         // Clear any existing auth status messages
         document.getElementById("auth-status").innerHTML =
           "<p>Redirecting to Spotify...</p>";
@@ -563,12 +497,6 @@
         localStorage.setItem("spotify_code_verifier", codeVerifier);
         localStorage.setItem("spotify_auth_state", state);
 
-        debugAuth("Generated PKCE parameters", {
-          codeVerifier: codeVerifier.substring(0, 10) + "...",
-          codeChallenge: codeChallenge.substring(0, 10) + "...",
-          state,
-        });
-
         const params = new URLSearchParams({
           response_type: "code",
           client_id: CLIENT_ID,
@@ -580,23 +508,15 @@
         });
 
         const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
-        debugAuth("Auth URL", { url: authUrl });
-
         window.location.href = authUrl;
       }
 
       async function handleAuthCallback() {
         const urlParams = new URLSearchParams(window.location.search);
 
-        debugAuth("Handling auth callback", {
-          search: window.location.search,
-          href: window.location.href,
-        });
-
         // Check for error
         const error = urlParams.get("error");
         if (error) {
-          debugAuth("Auth error", { error });
           showStatus("Authentication failed: " + error, "error");
           return;
         }
@@ -606,19 +526,12 @@
         const state = urlParams.get("state");
 
         if (!code) {
-          debugAuth("No authorization code found - normal on first load");
           return;
         }
-
-        debugAuth("Authorization code received", {
-          code: code.substring(0, 10) + "...",
-          state,
-        });
 
         // Verify state parameter
         const storedState = localStorage.getItem("spotify_auth_state");
         if (state !== storedState) {
-          debugAuth("State mismatch", { received: state, stored: storedState });
           showStatus("Authentication failed: state mismatch", "error");
           return;
         }
@@ -626,13 +539,11 @@
         // Exchange code for token
         const codeVerifier = localStorage.getItem("spotify_code_verifier");
         if (!codeVerifier) {
-          debugAuth("No code verifier found");
           showStatus("Authentication failed: missing code verifier", "error");
           return;
         }
 
         try {
-          debugAuth("Exchanging code for token");
           const response = await fetch(
             "https://accounts.spotify.com/api/token",
             {
@@ -652,10 +563,6 @@
 
           if (!response.ok) {
             const errorData = await response.json();
-            debugAuth("Token exchange failed", {
-              status: response.status,
-              error: errorData,
-            });
             showStatus(
               `Authentication failed: ${errorData.error || "Unknown error"}`,
               "error"
@@ -664,11 +571,6 @@
           }
 
           const data = await response.json();
-          debugAuth("Token exchange successful", {
-            hasAccessToken: !!data.access_token,
-            expiresIn: data.expires_in,
-            hasRefreshToken: !!data.refresh_token,
-          });
 
           // Save tokens
           saveToken(data.access_token, data.expires_in, data.refresh_token);
@@ -683,13 +585,7 @@
           updateAuthStatus();
           showStatus("Successfully connected to Spotify!", "success");
           setTimeout(hideStatus, 3000);
-
-          // Test the token
-          setTimeout(() => {
-            testSpotifyApp();
-          }, 1000);
         } catch (error) {
-          debugAuth("Token exchange error", { error: error.message });
           showStatus("Authentication failed: " + error.message, "error");
         }
       }
@@ -697,11 +593,7 @@
       function updateAuthStatus() {
         const authStatus = document.getElementById("auth-status");
         const authBtn = document.getElementById("auth-btn");
-        const checkButtons = [
-          "check-artists-btn",
-          // "check-labels-btn", // Commented out
-          // Removed "check-all-btn" reference
-        ];
+        const checkButtons = ["check-artists-btn"];
 
         // Add search controls
         const searchInput = document.getElementById("artist-search-input");
@@ -709,7 +601,7 @@
 
         if (isTokenValid()) {
           authStatus.innerHTML =
-            '<p style="color: green;">✅ Connected to Spotify</p><button onclick="testSpotifyApp()" style="font-size: 12px; padding: 5px;">Test Token</button>';
+            '<p style="color: green;">✅ Connected to Spotify</p>';
           authBtn.textContent = "Reconnect to Spotify";
 
           // Enable all buttons and search input
@@ -746,8 +638,6 @@
       // Read boycott lists from nomusicforgenocide.org via proxy
       async function readBoycottLists() {
         try {
-          debugAPI("Fetching artist data from nomusicforgenocide.org");
-
           const response = await fetch(
             "https://shielded-mesa-31700-647fedc50526.herokuapp.com/api/artists"
           );
@@ -756,7 +646,6 @@
             throw new Error(`HTTP error! status: ${response.status}`);
           }
 
-          debugAPI("Successfully fetched data from proxy server");
           const html = await response.text();
 
           // Parse the HTML to extract artist names
@@ -768,8 +657,6 @@
             'div[style="text-align: center"]'
           );
 
-          debugAPI(`Found ${artistElements.length} artist elements in HTML`);
-
           const allArtists = [];
           let count = 0;
 
@@ -779,7 +666,6 @@
 
             // Skip certain items based on the same logic as music.html
             if (count === 1 || count === 3 || count === 5 || count === 7) {
-              debugAPI(`Skipping item ${count}: ${artistText}`);
               return;
             }
 
@@ -791,29 +677,15 @@
                   .map((name) => name.trim())
                   .filter((name) => name !== "");
                 allArtists.push(...individualArtists);
-                debugAPI(
-                  `Split item ${count} into ${individualArtists.length} artists`
-                );
               } else {
                 allArtists.push(artistText);
-                debugAPI(
-                  `Added single artist from item ${count}: ${artistText}`
-                );
               }
             }
-          });
-
-          debugAPI(`Total artists extracted: ${allArtists.length}`, {
-            sampleArtists: allArtists.slice(0, 10),
           });
 
           // Remove duplicates and filter out empty strings
           const uniqueArtists = [...new Set(allArtists)].filter(
             (name) => name.trim() !== ""
-          );
-
-          debugAPI(
-            `Unique artists after deduplication: ${uniqueArtists.length}`
           );
 
           // For now, we'll use the artists for both categories since the website primarily lists artists
@@ -827,10 +699,6 @@
             "Error reading boycott lists from nomusicforgenocide.org:",
             error
           );
-          debugAPI("Error fetching from nomusicforgenocide.org", {
-            error: error.message,
-            fallback: "Using empty lists",
-          });
 
           // Fallback to empty lists if fetch fails
           return { artists: [], labels: [] };
@@ -845,30 +713,17 @@
         const headers = { Authorization: `Bearer ${token}` };
 
         try {
-          logRequest(url, headers);
-
           const response = await fetch(url, { headers });
 
           if (!response.ok) {
-            logResponse(url, response);
             throw new Error(`HTTP error! status: ${response.status}`);
           }
 
           const data = await response.json();
-          logResponse(url, response, {
-            totalResults: data.artists.items.length,
-            firstResult: data.artists.items[0]
-              ? {
-                  name: data.artists.items[0].name,
-                  id: data.artists.items[0].id,
-                  popularity: data.artists.items[0].popularity,
-                }
-              : null,
-          });
 
           return data.artists.items.length > 0 ? data.artists.items[0] : null;
         } catch (error) {
-          logError(`searching for artist ${artistName}`, error, {
+          console.error(`[ERROR] searching for artist ${artistName}:`, error, {
             url,
             artistName,
           });
@@ -882,47 +737,32 @@
         const headers = { Authorization: `Bearer ${token}` };
 
         try {
-          logRequest(url, headers);
-
           const response = await fetch(url, { headers });
 
           if (!response.ok) {
-            logResponse(url, response);
             throw new Error(`HTTP error! status: ${response.status}`);
           }
 
           const data = await response.json();
-          logResponse(url, response, {
-            totalAlbums: data.items?.length || 0,
-            albumSample:
-              data.items?.slice(0, 3).map((album) => ({
-                name: album.name,
-                releaseDate: album.release_date,
-                marketCount: album.available_markets?.length || 0,
-                hasUS: album.available_markets?.includes("US"),
-                hasIL: album.available_markets?.includes("IL"),
-                hasDE: album.available_markets?.includes("DE"),
-                hasGB: album.available_markets?.includes("GB"),
-              })) || [],
-          });
 
           return data.items || [];
         } catch (error) {
-          logError(`getting albums for artist ${artistId}`, error, {
-            url,
-            artistId,
-          });
+          console.error(
+            `[ERROR] getting albums for artist ${artistId}:`,
+            error,
+            {
+              url,
+              artistId,
+            }
+          );
           return [];
         }
       }
 
       // Main checking functions
       async function checkSingleArtist(artistName, token) {
-        debugAPI(`Starting check for artist: ${artistName}`);
-
         const artist = await searchSpotifyArtist(artistName, token);
         if (!artist) {
-          debugAPI(`Artist not found on Spotify: ${artistName}`);
           return {
             name: artistName,
             found: false,
@@ -932,44 +772,11 @@
           };
         }
 
-        debugAPI(`Artist found on Spotify`, {
-          searchTerm: artistName,
-          spotifyName: artist.name,
-          artistId: artist.id,
-          popularity: artist.popularity,
-          followers: artist.followers?.total,
-          genres: artist.genres,
-        });
-
         const albums = await getArtistAlbums(artist.id, token);
-        debugAPI(`Retrieved ${albums.length} albums for ${artist.name}`, {
-          albumCount: albums.length,
-          albums: albums.map((album) => ({
-            name: album.name,
-            releaseDate: album.release_date,
-            albumType: album.album_type,
-            totalTracks: album.total_tracks,
-            marketCount: album.available_markets?.length || 0,
-            hasUS: album.available_markets?.includes("US"),
-            hasIL: album.available_markets?.includes("IL"),
-            hasDE: album.available_markets?.includes("DE"),
-            hasGB: album.available_markets?.includes("GB"),
-            allMarkets: album.available_markets?.slice(0, 10), // Show first 10 markets for debugging
-          })),
-        });
 
         const availableAlbums = albums.filter((album) => {
           const hasTargetMarket =
             album.available_markets && album.available_markets.includes("IL");
-          debugAPI(`Album availability check: ${album.name}`, {
-            hasMarkets: !!album.available_markets,
-            marketCount: album.available_markets?.length || 0,
-            hasIL: hasTargetMarket,
-            hasUS: album.available_markets?.includes("US"),
-            hasDE: album.available_markets?.includes("DE"),
-            hasGB: album.available_markets?.includes("GB"),
-            sampleMarkets: album.available_markets?.slice(0, 20),
-          });
           return hasTargetMarket;
         });
 
@@ -994,16 +801,6 @@
           notAvailable: notAvailable,
         };
 
-        debugAPI(`Final result for ${artistName}`, {
-          found: result.found,
-          totalAlbums: result.albums.length,
-          availableAlbums: result.availableAlbums.length,
-          fullyAvailable: result.fullyAvailable,
-          partiallyAvailable: result.partiallyAvailable,
-          notAvailable: result.notAvailable,
-          spotifyName: result.spotifyName,
-        });
-
         return result;
       }
 
@@ -1023,39 +820,52 @@
 
         // Skip the first artist in the list
         const artistsToCheck = artists.slice(1);
-        
+
         if (artistsToCheck.length === 0) {
-          showStatus("No artists to check after skipping the first one.", "error");
+          showStatus(
+            "No artists to check after skipping the first one.",
+            "error"
+          );
           return;
         }
 
         // Clear previous results and show initial status
         document.getElementById("artist-results").innerHTML = "";
         document.getElementById("summary").style.display = "none";
-        
-        showStatus(`Checking ${artistsToCheck.length} artists (skipping first)...`);
-        const results = [];
+        allResults = []; // Clear global results array
+
+        showStatus(
+          `Checking ${artistsToCheck.length} artists (skipping first)...`
+        );
 
         for (let i = 0; i < artistsToCheck.length; i++) {
           showStatus(
-            `Checking artist ${i + 1}/${artistsToCheck.length}: ${artistsToCheck[i]}`
+            `Checking artist ${i + 1}/${artistsToCheck.length}: ${
+              artistsToCheck[i]
+            }`
           );
-          
-          const result = await checkSingleArtist(artistsToCheck[i], accessToken);
-          results.push(result);
+
+          const result = await checkSingleArtist(
+            artistsToCheck[i],
+            accessToken
+          );
+          allResults.push(result); // Store in global array for filtering
 
           // Display this single result immediately
           displaySingleResult(result, "artist-results");
-          
+
           // Update summary with current results
-          updateSummary(results, []);
+          updateSummary(allResults, []);
 
           // Add delay to avoid rate limiting
           await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
         // Final status update
-        showStatus(`Completed checking ${artistsToCheck.length} artists`, "success");
+        showStatus(
+          `Completed checking ${artistsToCheck.length} artists`,
+          "success"
+        );
         setTimeout(hideStatus, 3000);
       }
 
@@ -1216,13 +1026,22 @@
 
       function updateSummary(artistResults, labelResults) {
         const totalArtists = artistResults.length + labelResults.length;
-        const availableCount = [...artistResults, ...labelResults].filter(
-          (r) => r.availableInRegion
+        const fullyAvailableCount = [...artistResults, ...labelResults].filter(
+          (r) => r.fullyAvailable
         ).length;
-        const unavailableCount = totalArtists - availableCount;
+        const partiallyAvailableCount = [
+          ...artistResults,
+          ...labelResults,
+        ].filter((r) => r.partiallyAvailable).length;
+        const unavailableCount = [...artistResults, ...labelResults].filter(
+          (r) => r.notAvailable
+        ).length;
 
         document.getElementById("total-artists").textContent = totalArtists;
-        document.getElementById("available-count").textContent = availableCount;
+        document.getElementById("available-count").textContent =
+          fullyAvailableCount;
+        document.getElementById("partially-available-count").textContent =
+          partiallyAvailableCount;
         document.getElementById("unavailable-count").textContent =
           unavailableCount;
         document.getElementById("summary").style.display = "block";
@@ -1243,7 +1062,6 @@
           return;
         }
 
-        debugAPI(`Searching for individual artist: ${artistName}`);
         showStatus(`Searching for ${artistName}...`);
 
         try {
@@ -1258,7 +1076,9 @@
           // Clear the search input
           input.value = "";
         } catch (error) {
-          logError("individual artist search", error, { artistName });
+          console.error(`[ERROR] individual artist search:`, error, {
+            artistName,
+          });
           showStatus(
             `Error searching for ${artistName}: ${error.message}`,
             "error"
@@ -1279,39 +1099,6 @@
           }
         });
       });
-
-      /* // Commented out label availability function
-      async function checkLabelAvailability() {
-        if (!isTokenValid()) {
-          alert("Please authenticate with Spotify first.");
-          return;
-        }
-
-        showStatus("Reading label boycott list...");
-        const { labels } = await readBoycottLists();
-
-        if (labels.length === 0) {
-          showStatus("No labels found in boycott list.", "error");
-          return;
-        }
-
-        showStatus(`Checking ${labels.length} labels...`);
-        const results = [];
-
-        for (let i = 0; i < labels.length; i++) {
-          showStatus(`Checking label ${i + 1}/${labels.length}: ${labels[i]}`);
-          const result = await checkSingleArtist(labels[i], accessToken);
-          results.push(result);
-
-          // Add delay to avoid rate limiting
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        }
-
-        displayResults(results, "label-results", "label");
-        updateSummary([], results);
-        hideStatus();
-      }
-      */
 
       // Initialize
       document.addEventListener("DOMContentLoaded", function () {
