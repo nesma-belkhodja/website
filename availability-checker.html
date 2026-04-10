@@ -882,7 +882,7 @@
 
           const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(
             searchQuery
-          )}&type=artist&limit=10`;
+          )}&type=artist&limit=50`; // Maximum allowed by Spotify API
           const headers = { Authorization: `Bearer ${token}` };
 
           try {
@@ -928,7 +928,7 @@
         const bestVariation = searchVariations[searchVariations.length > 1 ? 2 : 0]; // Prefer without parens
         const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(
           bestVariation.term
-        )}&type=artist&limit=10`;
+        )}&type=artist&limit=50`; // Maximum allowed by Spotify API
         const headers = { Authorization: `Bearer ${token}` };
 
         try {
