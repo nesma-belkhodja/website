@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSVP - SOIRAVE</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="rsvp-page">
+        <div class="rsvp-header">
+            <img src="images/Logos/SOIREGG IV.jpg" alt="Soiregg Soirave" class="page-logo">
+            <a href="index.html" class="back-link">← BACK TO HOME</a>
+        </div>
+
+        <div class="rsvp-form-container">
+            <h2>RSVP</h2>
+            <p class="rsvp-subtitle">Saturday May 16 • 11PM - 6AM</p>
+
+            <form name="rsvp" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/success.html">
+                <input type="hidden" name="form-name" value="rsvp">
+
+                <p class="hidden">
+                    <label>Don't fill this out: <input name="bot-field"></label>
+                </p>
+
+                <div class="form-group">
+                    <label for="name">Name*</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone*</label>
+                    <input type="tel" id="phone" name="phone" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="note">Note</label>
+                    <textarea id="note" name="note" rows="4"></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">Submit RSVP</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - SOIRAVE</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Login Form -->
+        <section id="login-section" class="admin-login">
+            <h2>Admin Login</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="submit-btn">Login</button>
+                <p id="login-error" class="error-message"></p>
+            </form>
+        </section>
+
+        <!-- Admin Dashboard -->
+        <section id="dashboard-section" class="admin-dashboard" style="display: none;">
+            <div class="dashboard-header">
+                <h2>RSVP Submissions</h2>
+                <div class="dashboard-actions">
+                    <button id="export-btn" class="export-btn">Export CSV</button>
+                    <button id="logout-btn" class="logout-btn">Logout</button>
+                    <a href="index.html" class="back-link">Back Home</a>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <h3 id="total-rsvps">0</h3>
+                    <p>Total RSVPs</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="total-guests">0</h3>
+                    <p>Total Guests</p>
+                </div>
+            </div>
+
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Search by name or email...">
+            </div>
+
+            <div class="rsvp-table-container">
+                <table class="rsvp-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Guests</th>
+                            <th>Dietary</th>
+                            <th>Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rsvp-table-body">
+                        <tr>
+                            <td colspan="7" class="no-data">Loading RSVPs...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

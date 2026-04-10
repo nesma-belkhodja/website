@@ -1,0 +1,740 @@
+@import url('https://fonts.googleapis.com/css2?family=Righteous&display=swap');
+
+@font-face {
+    font-family: 'Inversionz';
+    src: url('../fonts/Inversionz.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inversionz', 'Righteous', 'Arial Black', sans-serif;
+    background: #000000;
+    color: #00FF00;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.flier-container {
+    max-width: 800px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+/* Logo Section */
+.logo-section {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.main-logo {
+    max-width: 100%;
+    width: 600px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.green {
+    color: #00FF00;
+}
+
+.pink {
+    color: #FF00FF;
+}
+
+.yellow {
+    color: #FFFF00;
+}
+
+/* Event Info - Boxed Letters */
+.event-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+}
+
+.boxed-text {
+    display: flex;
+    gap: 0.3rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.boxed-text span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    background: #00FF00;
+    color: #000000;
+    font-size: 3.5rem;
+    font-weight: 700;
+    border: 3px solid #00FF00;
+    line-height: 1;
+    overflow: hidden;
+}
+
+.boxed-text .space {
+    background: transparent;
+    border: none;
+    width: 1rem;
+}
+
+/* Flier Box */
+.flier-box {
+    width: 100%;
+    max-width: 500px;
+    aspect-ratio: 1;
+    border: 5px solid #00FF00;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
+.flier-placeholder-text {
+    font-size: 3rem;
+    color: #FFFFFF;
+    text-align: center;
+    line-height: 1.2;
+    opacity: 0.3;
+    font-family: serif;
+}
+
+/* Buttons */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin: 1rem 0 2rem 0;
+    align-items: center;
+}
+
+.rsvp-button,
+.photos-button {
+    text-decoration: none;
+    display: block;
+    transition: transform 0.3s;
+}
+
+.rsvp-button:hover,
+.photos-button:hover {
+    transform: scale(1.1);
+}
+
+.rsvp-button .boxed-text span,
+.photos-button .boxed-text span {
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 3.5rem;
+    background: #00FF00;
+    color: #000000;
+    border: 3px solid #00FF00;
+    line-height: 1;
+    overflow: hidden;
+}
+
+/* Photos Section */
+.photos-section {
+    width: 100%;
+    margin-top: 3rem;
+}
+
+.photos-title {
+    color: #00FF00;
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    text-transform: lowercase;
+    letter-spacing: 0.1em;
+}
+
+.gallery-section {
+    margin-bottom: 3rem;
+}
+
+.year-title {
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+/* Photos Page Specific Styles */
+.photos-page .photos-title {
+    font-size: 4rem;
+    text-align: left;
+    margin-bottom: 3rem;
+    color: #00FF00;
+}
+
+.photos-page .year-title {
+    font-size: 3rem;
+    text-align: left;
+    margin-bottom: 2rem;
+}
+
+.photos-page .year-title.pink {
+    color: #00FF00;
+}
+
+.photos-page .year-title.yellow {
+    color: #00FF00;
+}
+
+.photos-page .year-title.green {
+    color: #00FF00;
+}
+
+.photos-page .back-link {
+    color: #00FF00;
+}
+
+.photos-page-header .back-link {
+    color: #00FF00;
+}
+
+.year-title.pink {
+    color: #FF00FF;
+}
+
+.year-title.yellow {
+    color: #FFFF00;
+}
+
+.year-title.green {
+    color: #00FF00;
+}
+
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.photo-placeholder {
+    aspect-ratio: 1;
+    background: #111111;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.photo-placeholder:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #00FF00;
+}
+
+.photo-grid img {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.photo-grid img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #00FF00;
+}
+
+/* Lightbox */
+.lightbox {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+}
+
+.lightbox.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-content {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+}
+
+.close {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    color: #00FF00;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1001;
+}
+
+.close:hover {
+    color: #FF00FF;
+}
+
+.lightbox-nav button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #00FF00;
+    color: #000000;
+    border: none;
+    font-size: 2rem;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    font-weight: 900;
+    transition: all 0.3s;
+}
+
+.lightbox-nav button:hover {
+    background: #FF00FF;
+    box-shadow: 0 0 20px #FF00FF;
+}
+
+.prev {
+    left: 20px;
+}
+
+.next {
+    right: 20px;
+}
+
+/* RSVP Page Styles */
+.rsvp-page,
+.photos-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.rsvp-page {
+    max-width: 600px;
+}
+
+.photos-page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.rsvp-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.page-logo {
+    max-width: 400px;
+    width: 100%;
+    height: auto;
+    margin: 0 auto 1rem;
+    display: block;
+}
+
+.back-link {
+    color: #00FF00;
+    text-decoration: none;
+    font-size: 1.5rem;
+    display: inline-block;
+    margin-bottom: 2rem;
+    transition: color 0.3s;
+}
+
+.back-link:hover {
+    color: #FF00FF;
+}
+
+.rsvp-form-container {
+    background: #000000;
+    border: 5px solid #00FF00;
+    padding: 2rem;
+}
+
+.rsvp-form-container h2 {
+    text-align: center;
+    color: #00FF00;
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+}
+
+.rsvp-subtitle {
+    text-align: center;
+    color: #FF00FF;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 1.8rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.8rem;
+    color: #00FF00;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 1.8rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 1.2rem;
+    border: 3px solid #00FF00;
+    background: #000000;
+    color: #00FF00;
+    font-size: 1.8rem;
+    font-family: 'Inversionz', 'Righteous', sans-serif;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #FF00FF;
+    box-shadow: 0 0 15px #00FF00;
+}
+
+.hidden {
+    display: none;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 1.5rem;
+    background: #00FF00;
+    color: #000000;
+    border: 3px solid #00FF00;
+    font-size: 2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 0.2rem;
+    font-family: 'Inversionz', 'Righteous', sans-serif;
+}
+
+.submit-btn:hover {
+    background: #000000;
+    color: #00FF00;
+    box-shadow: 0 0 30px #00FF00;
+}
+
+/* Success Page */
+.success-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+.success-box {
+    border: 5px solid #00FF00;
+    padding: 3rem 2rem;
+    background: #000000;
+}
+
+.success-box h2 {
+    font-size: 2.5rem;
+    color: #00FF00;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+}
+
+.success-box p {
+    color: #00FF00;
+    font-size: 1.2rem;
+    margin: 1rem 0;
+}
+
+.success-details {
+    color: #FF00FF;
+    font-weight: 700;
+}
+
+.back-btn {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 1rem 2rem;
+    background: #00FF00;
+    color: #000000;
+    text-decoration: none;
+    border: 3px solid #00FF00;
+    font-weight: 700;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 0.2rem;
+}
+
+.back-btn:hover {
+    background: #000000;
+    color: #00FF00;
+    box-shadow: 0 0 30px #00FF00;
+}
+
+/* Admin Page */
+.admin-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.admin-login {
+    max-width: 400px;
+    margin: 5rem auto;
+    background: #000000;
+    padding: 3rem;
+    border: 5px solid #00FF00;
+}
+
+.admin-login h2 {
+    text-align: center;
+    color: #00FF00;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    font-size: 2rem;
+}
+
+.error-message {
+    color: #FF00FF;
+    text-align: center;
+    margin-top: 1rem;
+    text-transform: uppercase;
+}
+
+.admin-dashboard {
+    padding: 2rem;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.dashboard-header h2 {
+    color: #00FF00;
+    font-size: 2rem;
+    text-transform: uppercase;
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.export-btn, .logout-btn {
+    padding: 0.8rem 1.5rem;
+    border: 3px solid;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 0.15rem;
+    font-family: 'Inversionz', 'Righteous', sans-serif;
+}
+
+.export-btn {
+    background: #00FF00;
+    color: #000000;
+    border-color: #00FF00;
+}
+
+.logout-btn {
+    background: #FF00FF;
+    color: #000000;
+    border-color: #FF00FF;
+}
+
+.export-btn:hover {
+    background: #000000;
+    color: #00FF00;
+    box-shadow: 0 0 20px #00FF00;
+}
+
+.logout-btn:hover {
+    background: #000000;
+    color: #FF00FF;
+    box-shadow: 0 0 20px #FF00FF;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: #000000;
+    padding: 2rem;
+    border: 3px solid #00FF00;
+    text-align: center;
+}
+
+.stat-card h3 {
+    font-size: 3rem;
+    color: #00FF00;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card p {
+    color: #FF00FF;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+}
+
+.search-bar {
+    margin-bottom: 2rem;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 1rem;
+    border: 3px solid #00FF00;
+    background: #000000;
+    color: #00FF00;
+    font-size: 1rem;
+    font-family: 'Inversionz', 'Righteous', sans-serif;
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: #FF00FF;
+    box-shadow: 0 0 15px #00FF00;
+}
+
+.rsvp-table-container {
+    overflow-x: auto;
+    background: #000000;
+    border: 3px solid #00FF00;
+    padding: 1rem;
+}
+
+.rsvp-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.rsvp-table th,
+.rsvp-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 2px solid #00FF00;
+}
+
+.rsvp-table th {
+    background: #00FF00;
+    color: #000000;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.rsvp-table td {
+    color: #00FF00;
+}
+
+.rsvp-table tr:hover {
+    background: #001a00;
+}
+
+.no-data {
+    text-align: center;
+    color: #00FF00;
+    padding: 2rem !important;
+    text-transform: uppercase;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .main-logo {
+        width: 90%;
+    }
+
+    .boxed-text span {
+        width: 1.8rem;
+        height: 1.8rem;
+        font-size: 2.8rem;
+    }
+
+    .flier-box {
+        max-width: 100%;
+    }
+
+    .flier-placeholder-text {
+        font-size: 2rem;
+    }
+
+    .rsvp-button .boxed-text span,
+    .photos-button .boxed-text span {
+        width: 1.8rem;
+        height: 1.8rem;
+        font-size: 2.8rem;
+    }
+
+    .photo-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .main-logo {
+        width: 95%;
+    }
+
+    .boxed-text span {
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 2.4rem;
+        gap: 0.2rem;
+    }
+
+    .boxed-text .space {
+        width: 0.5rem;
+    }
+
+    .rsvp-button .boxed-text span,
+    .photos-button .boxed-text span {
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 2.4rem;
+    }
+
+    .photo-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

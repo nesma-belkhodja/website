@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Music</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: green; /* Set the background color of the webpage to green */
+        color: #222; /* Dark text for readability */
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        margin: 20px 0;
+        color: #111; /* Slightly darker for emphasis */
+      }
+
+      #artist-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 20px auto;
+        max-width: 600px;
+        background: #ffffff; /* White background for contrast */
+        border: 1px solid #ccc; /* Light gray border */
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      #artist-list li {
+        padding: 10px 15px;
+        border-bottom: 1px solid #eee; /* Subtle divider */
+        font-size: 1.2rem;
+      }
+
+      #artist-list li:last-child {
+        border-bottom: none;
+      }
+
+      footer {
+        margin-top: 20px;
+        font-size: 0.9rem;
+        color: #666; /* Muted text for footer */
+      }
+
+      button {
+        cursor: pointer;
+        background-color: #28a745; /* Green color */
+        color: #fff; /* White text */
+        border: none; /* Remove default border */
+        border-radius: 4px; /* Rounded corners */
+        padding: 5px 10px; /* Smaller padding for smaller buttons */
+        font-size: 0.9rem; /* Slightly smaller font size */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        transition: background-color 0.3s, transform 0.2s; /* Smooth hover effects */
+        margin-left: 10px; /* Add spacing between buttons */
+        float: right; /* Anchor buttons to the right side of the parent */
+      }
+
+      button:hover {
+        background-color: #218838; /* Darker green on hover */
+        transform: translateY(-1px); /* Slight lift effect */
+      }
+
+      button:active {
+        background-color: #1e7e34; /* Even darker green on click */
+        transform: translateY(0); /* Reset lift effect */
+      }
+
+      #item-2,
+      #item-6 {
+        background-color: red;
+        border-radius: 8px; /* Rounded corners */
+      }
+
+      #password-protection {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: green; /* Optional: to cover the content below */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000; /* Ensure it stays above other content */
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="password-protection"
+      style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      "
+    >
+      <form id="password-form" style="text-align: center">
+        <label for="password">Enter Password:</label>
+        <input type="password" id="password" name="password" required />
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+
+    <div id="content" style="display: block">
+      <ul id="artist-list">
+        <!-- Artist names will be dynamically loaded here -->
+      </ul>
+    </div>
+    <script>
+      const hashedPassword =
+        "925f7fe559337da418256bc7da51f2c53377e87d91d8c29dca9c541b572865f2";
+
+      document
+        .getElementById("password-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const inputPassword = document.getElementById("password").value;
+          const encoder = new TextEncoder();
+          crypto.subtle
+            .digest("SHA-256", encoder.encode(inputPassword))
+            .then((buffer) => {
+              const hashArray = Array.from(new Uint8Array(buffer));
+              const hashHex = hashArray
+                .map((b) => b.toString(16).padStart(2, "0"))
+                .join("");
+              if (hashHex === hashedPassword) {
+                document.getElementById("password-protection").style.display =
+                  "none";
+                document.getElementById("content").style.display = "block";
+              } else {
+                alert("Incorrect password. Please try again.");
+              }
+            })
+            .catch((error) => {
+              console.error("Error during hashing:", error); // Debugging: Log any errors during hashing
+            });
+        });
+    </script>
+    <script>
+      // Helper function to normalize names for alphabetization (ignore non-English characters and dashes)
+      function normalizeForSorting(name) {
+        // Extract Latin characters and common punctuation for sorting
+        const latinPart = name
+          .normalize("NFD") // Decompose accented characters
+          .replace(/[\u0300-\u036f]/g, "") // Remove combining diacritical marks
+          .match(/[a-zA-Z0-9\s\-\.\']+/g); // Extract Latin characters, numbers, spaces, hyphens, periods, apostrophes
+
+        // If we found Latin characters, use them for sorting
+        if (latinPart && latinPart.length > 0) {
+          return latinPart
+            .join(" ")
+            .replace(/[-]/g, "") // Remove dashes for alphabetization
+            .toLowerCase()
+            .trim();
+        }
+
+        // Fallback: if no Latin characters found, use the original name (also remove dashes)
+        return name.replace(/[-]/g, "").toLowerCase().trim();
+      }
+
+      async function fetchArtists() {
+        const artistList = document.getElementById("artist-list");
+        try {
+          const response = await fetch(
+            "https://shielded-mesa-31700-647fedc50526.herokuapp.com/api/artists"
+          );
+          // const response = await fetch("http://localhost:3000/api/artists");
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          console.log("Response received:", response); // Debugging: Log the response object
+          const text = await response.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(text, "text/html");
+          const artistElements = doc.querySelectorAll(
+            'div[style="text-align: center"]'
+          );
+          let count = 0;
+          artistElements.forEach((artistElement) => {
+            const listItem = document.createElement("li");
+            listItem.textContent = artistElement.textContent.trim();
+            listItem.id = `item-${++count}`;
+            if (
+              listItem.id === "item-1" ||
+              listItem.id == "item-3" ||
+              listItem.id == "item-5" ||
+              listItem.id == "item-7"
+            ) {
+              return;
+            }
+
+            // Add copy button to the first item
+            if (listItem.id === "item-2") {
+              const copyButton = document.createElement("button");
+              copyButton.textContent = "Copy";
+              copyButton.onclick = () => {
+                const item3 = document.getElementById("item-4");
+                if (item3) {
+                  navigator.clipboard.writeText(item3.textContent).then(() => {
+                    console.log("Copied to clipboard!");
+                  });
+                } else {
+                  alert("Item 4 not found!");
+                }
+              };
+              listItem.appendChild(copyButton);
+
+              const addButton = document.createElement("button");
+              addButton.textContent = "Add";
+              addButton.onclick = () => {
+                // Create modal
+                const modal = document.createElement("div");
+                modal.style.position = "fixed";
+                modal.style.top = "0";
+                modal.style.left = "0";
+                modal.style.width = "100%";
+                modal.style.height = "100%";
+                modal.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+                modal.style.display = "flex";
+                modal.style.justifyContent = "center";
+                modal.style.alignItems = "center";
+
+                // Create modal content
+                const modalContent = document.createElement("div");
+                modalContent.style.backgroundColor = "#fff";
+                modalContent.style.padding = "20px";
+                modalContent.style.borderRadius = "8px";
+                modalContent.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
+                modalContent.style.textAlign = "center";
+
+                const input = document.createElement("input");
+                input.type = "text";
+                input.placeholder = "Enter names separated by commas";
+                input.style.marginBottom = "10px";
+                input.style.width = "90%";
+                input.style.padding = "8px";
+                input.style.border = "1px solid #ccc";
+                input.style.borderRadius = "4px";
+
+                const saveButton = document.createElement("button");
+                saveButton.textContent = "Save";
+                saveButton.style.marginRight = "10px";
+                saveButton.onclick = () => {
+                  const artistNames = input.value
+                    .split(",")
+                    .map((name) => name.trim())
+                    .filter((name) => name !== "");
+                  if (artistNames.length > 0) {
+                    const item2 = document.getElementById("item-4");
+                    if (item2) {
+                      const existingArtists = item2.textContent
+                        .split(/·\s*/)
+                        .filter((name) => name.trim() !== "")
+                        .map((name) => name.trim());
+
+                      // Combine existing and new artists, remove duplicates
+                      const allArtists = [...existingArtists];
+                      artistNames.forEach((artistName) => {
+                        if (!allArtists.includes(artistName)) {
+                          allArtists.push(artistName);
+                        }
+                      });
+
+                      // Sort all artists alphabetically using the normalize function
+                      allArtists.sort((a, b) => {
+                        const normalizedA = normalizeForSorting(a);
+                        const normalizedB = normalizeForSorting(b);
+                        return normalizedA.localeCompare(normalizedB);
+                      });
+
+                      item2.textContent = allArtists.join(" · ");
+                    } else {
+                      alert("Item 2 not found!");
+                    }
+                    document.body.removeChild(modal);
+                  } else {
+                    alert("Please enter valid artist names.");
+                  }
+                };
+
+                const cancelButton = document.createElement("button");
+                cancelButton.textContent = "Cancel";
+                cancelButton.onclick = () => {
+                  document.body.removeChild(modal);
+                };
+
+                modalContent.appendChild(input);
+                modalContent.appendChild(saveButton);
+                modalContent.appendChild(cancelButton);
+                modal.appendChild(modalContent);
+                document.body.appendChild(modal);
+              };
+
+              listItem.appendChild(addButton);
+            }
+
+            // Add copy button to the third item
+            if (listItem.id === "item-6") {
+              const copyButton = document.createElement("button");
+              copyButton.textContent = "Copy";
+              copyButton.onclick = () => {
+                const item4 = document.getElementById("item-8");
+                if (item4) {
+                  navigator.clipboard.writeText(item4.textContent).then(() => {
+                    console.log("Copied to clipboard!");
+                  });
+                } else {
+                  console.log("Item 8 not found!");
+                }
+              };
+              listItem.appendChild(copyButton);
+
+              const addButton = document.createElement("button");
+              addButton.textContent = "Add";
+              addButton.onclick = () => {
+                // Create modal
+                const modal = document.createElement("div");
+                modal.style.position = "fixed";
+                modal.style.top = "0";
+                modal.style.left = "0";
+                modal.style.width = "100%";
+                modal.style.height = "100%";
+                modal.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+                modal.style.display = "flex";
+                modal.style.justifyContent = "center";
+                modal.style.alignItems = "center";
+
+                // Create modal content
+                const modalContent = document.createElement("div");
+                modalContent.style.backgroundColor = "#fff";
+                modalContent.style.padding = "20px";
+                modalContent.style.borderRadius = "8px";
+                modalContent.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
+                modalContent.style.textAlign = "center";
+
+                const input = document.createElement("input");
+                input.type = "text";
+                input.placeholder = "Enter artist names, separated by commas";
+                input.style.marginBottom = "10px";
+                input.style.width = "100%";
+                input.style.padding = "8px";
+                input.style.border = "1px solid #ccc";
+                input.style.borderRadius = "4px";
+
+                const saveButton = document.createElement("button");
+                saveButton.textContent = "Save";
+                saveButton.style.marginRight = "10px";
+                saveButton.onclick = () => {
+                  const artistNames = input.value
+                    .split(",")
+                    .map((name) => name.trim())
+                    .filter((name) => name !== "");
+                  if (artistNames.length > 0) {
+                    const item4 = document.getElementById("item-8");
+                    if (item4) {
+                      const existingArtists = item4.textContent
+                        .split(/·\s*/)
+                        .filter((name) => name.trim() !== "")
+                        .map((name) => name.trim());
+
+                      // Combine existing and new artists, remove duplicates
+                      const allArtists = [...existingArtists];
+                      artistNames.forEach((artistName) => {
+                        if (!allArtists.includes(artistName)) {
+                          allArtists.push(artistName);
+                        }
+                      });
+
+                      // Sort all artists alphabetically using the normalize function
+                      allArtists.sort((a, b) => {
+                        const normalizedA = normalizeForSorting(a);
+                        const normalizedB = normalizeForSorting(b);
+                        return normalizedA.localeCompare(normalizedB);
+                      });
+
+                      item4.textContent = allArtists.join(" · ");
+                    } else {
+                      alert("Item 4 not found!");
+                    }
+                    document.body.removeChild(modal);
+                  } else {
+                    alert("Please enter valid artist names.");
+                  }
+                };
+
+                const cancelButton = document.createElement("button");
+                cancelButton.textContent = "Cancel";
+                cancelButton.onclick = () => {
+                  document.body.removeChild(modal);
+                };
+
+                modalContent.appendChild(input);
+                modalContent.appendChild(saveButton);
+                modalContent.appendChild(cancelButton);
+                modal.appendChild(modalContent);
+                document.body.appendChild(modal);
+              };
+              listItem.appendChild(addButton);
+            }
+
+            artistList.appendChild(listItem);
+          });
+
+          // Sort the artist lists after all items are loaded
+          setTimeout(() => {
+            // Sort item-4 (first artist list)
+            const item4 = document.getElementById("item-4");
+            if (item4 && item4.textContent.trim()) {
+              const artists = item4.textContent
+                .split(/·\s*/)
+                .filter((name) => name.trim() !== "")
+                .map((name) => name.trim());
+
+              if (artists.length > 1) {
+                artists.sort((a, b) => {
+                  const normalizedA = normalizeForSorting(a);
+                  const normalizedB = normalizeForSorting(b);
+                  return normalizedA.localeCompare(normalizedB);
+                });
+                item4.textContent = artists.join(" · ");
+              }
+            }
+
+            // Sort item-8 (second artist list)
+            const item8 = document.getElementById("item-8");
+            if (item8 && item8.textContent.trim()) {
+              const artists = item8.textContent
+                .split(/·\s*/)
+                .filter((name) => name.trim() !== "")
+                .map((name) => name.trim());
+
+              if (artists.length > 1) {
+                artists.sort((a, b) => {
+                  const normalizedA = normalizeForSorting(a);
+                  const normalizedB = normalizeForSorting(b);
+                  return normalizedA.localeCompare(normalizedB);
+                });
+                item8.textContent = artists.join(" · ");
+              }
+            }
+          }, 100); // Small delay to ensure DOM is fully updated
+        } catch (error) {
+          console.error("Error fetching artist names:", error);
+          artistList.innerHTML = "<li>Failed to load artist names.</li>";
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", fetchArtists);
+
+      function copyToClipboard(content) {
+        navigator.clipboard.writeText(content).then(() => {
+          console.log("List copied to clipboard!");
+        });
+      }
+    </script>
+  </body>
+</html>
