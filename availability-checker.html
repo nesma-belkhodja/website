@@ -52,6 +52,43 @@
         color: #111;
       }
 
+      .csv-upload-section {
+        background: #f0f8f0; /* Light green tint matching other sections */
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #28a745; /* Green border */
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      .csv-upload-section h3 {
+        margin-top: 0;
+        color: #111;
+      }
+
+      .csv-upload-group {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+      }
+
+      .csv-file-input {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background: white;
+        cursor: pointer;
+      }
+
+      .csv-file-name {
+        font-size: 14px;
+        color: #666;
+        font-style: italic;
+      }
+
       .search-input-group {
         display: flex;
         gap: 10px;
@@ -324,6 +361,29 @@
         <div id="search-results"></div>
       </div>
 
+      <div class="csv-upload-section">
+        <h3>Upload CSV File</h3>
+        <p>Upload a CSV file with artist names in the "Artist / Label name" column</p>
+        <div class="csv-upload-group">
+          <input
+            type="file"
+            id="csv-file-input"
+            class="csv-file-input"
+            accept=".csv"
+            onchange="handleCSVUpload(event)"
+            disabled
+          />
+          <button
+            id="check-csv-btn"
+            onclick="checkCSVArtists()"
+            disabled
+          >
+            Check Artists from CSV
+          </button>
+        </div>
+        <div id="csv-file-name" class="csv-file-name"></div>
+      </div>
+
       <div class="results-container">
         <div class="results-section">
           <div
@@ -386,6 +446,7 @@
 
       let allResults = []; // Global variable to store all results for filtering
       let currentFilter = "all"; // Track current filter state
+      let uploadedCSVData = null; // Store parsed CSV data
 
       // PKCE helper functions for Spotify authentication
       function generateRandomString(length) {
@@ -613,6 +674,10 @@
         const searchInput = document.getElementById("artist-search-input");
         const searchBtn = document.getElementById("search-artist-btn");
 
+        // Add CSV upload controls
+        const csvFileInput = document.getElementById("csv-file-input");
+        const checkCSVBtn = document.getElementById("check-csv-btn");
+
         if (isTokenValid()) {
           authStatus.innerHTML =
             '<p style="color: green;">✅ Connected to Spotify</p>';
@@ -624,6 +689,8 @@
           });
           searchInput.disabled = false;
           searchBtn.disabled = false;
+          csvFileInput.disabled = false;
+          // checkCSVBtn remains disabled until a file is uploaded
         } else {
           authStatus.innerHTML = '<p style="color: red;">❌ Not connected</p>';
           authBtn.textContent = "Connect to Spotify";
@@ -634,6 +701,8 @@
           });
           searchInput.disabled = true;
           searchBtn.disabled = true;
+          csvFileInput.disabled = true;
+          checkCSVBtn.disabled = true;
         }
       }
 
@@ -1102,6 +1171,207 @@
         document.getElementById("unavailable-count").textContent =
           unavailableCount;
         document.getElementById("summary").style.display = "block";
+      }
+
+      // CSV Upload Functions
+      function handleCSVUpload(event) {
+        const file = event.target.files[0];
+        const fileNameDisplay = document.getElementById("csv-file-name");
+        const checkCSVBtn = document.getElementById("check-csv-btn");
+
+        if (!file) {
+          fileNameDisplay.textContent = "";
+          checkCSVBtn.disabled = true;
+          uploadedCSVData = null;
+          return;
+        }
+
+        // Validate file type
+        if (!file.name.toLowerCase().endsWith(".csv")) {
+          showStatus("Please select a CSV file.", "error");
+          fileNameDisplay.textContent = "";
+          checkCSVBtn.disabled = true;
+          uploadedCSVData = null;
+          event.target.value = ""; // Clear the file input
+          return;
+        }
+
+        // Display file name
+        fileNameDisplay.textContent = `Selected: ${file.name}`;
+
+        // Read the file
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            const csvText = e.target.result;
+            const parsedData = parseCSV(csvText);
+            const artistNames = extractArtistNames(parsedData);
+
+            if (artistNames.length === 0) {
+              showStatus(
+                'No artist names found in CSV. Make sure there is an "Artist / Label name" column.',
+                "error"
+              );
+              checkCSVBtn.disabled = true;
+              uploadedCSVData = null;
+              return;
+            }
+
+            uploadedCSVData = artistNames;
+            checkCSVBtn.disabled = false;
+            showStatus(
+              `CSV loaded successfully. Found ${artistNames.length} unique artist(s).`,
+              "success"
+            );
+            setTimeout(hideStatus, 3000);
+          } catch (error) {
+            showStatus(`Error parsing CSV: ${error.message}`, "error");
+            checkCSVBtn.disabled = true;
+            uploadedCSVData = null;
+          }
+        };
+
+        reader.onerror = function () {
+          showStatus("Error reading file.", "error");
+          checkCSVBtn.disabled = true;
+          uploadedCSVData = null;
+        };
+
+        reader.readAsText(file);
+      }
+
+      function parseCSV(csvText) {
+        const lines = csvText.split(/\r?\n/);
+        const result = [];
+
+        // Simple CSV parser that handles quoted fields
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+
+          const row = [];
+          let currentField = "";
+          let insideQuotes = false;
+
+          for (let j = 0; j < line.length; j++) {
+            const char = line[j];
+
+            if (char === '"') {
+              insideQuotes = !insideQuotes;
+            } else if (char === "," && !insideQuotes) {
+              row.push(currentField.trim());
+              currentField = "";
+            } else {
+              currentField += char;
+            }
+          }
+
+          // Push the last field
+          row.push(currentField.trim());
+          result.push(row);
+        }
+
+        return result;
+      }
+
+      function extractArtistNames(parsedData) {
+        if (parsedData.length === 0) {
+          return [];
+        }
+
+        // First row is the header
+        const header = parsedData[0];
+        let artistColumnIndex = -1;
+
+        // Try to find the "Artist / Label name" column
+        for (let i = 0; i < header.length; i++) {
+          const columnName = header[i].toLowerCase().trim();
+          if (
+            columnName.includes("artist") &&
+            (columnName.includes("label") || columnName.includes("name"))
+          ) {
+            artistColumnIndex = i;
+            break;
+          }
+        }
+
+        // If not found by name, try column 7 (index 6) as specified
+        if (artistColumnIndex === -1 && header.length >= 7) {
+          artistColumnIndex = 6;
+        }
+
+        if (artistColumnIndex === -1) {
+          throw new Error('Could not find "Artist / Label name" column');
+        }
+
+        // Extract artist names from the data rows
+        const artistNames = [];
+        for (let i = 1; i < parsedData.length; i++) {
+          const row = parsedData[i];
+          if (row.length > artistColumnIndex) {
+            const artistName = row[artistColumnIndex].trim();
+            // Remove any surrounding quotes
+            const cleanName = artistName.replace(/^["']|["']$/g, "");
+            if (cleanName) {
+              artistNames.push(cleanName);
+            }
+          }
+        }
+
+        // Remove duplicates
+        return [...new Set(artistNames)];
+      }
+
+      async function checkCSVArtists() {
+        if (!isTokenValid()) {
+          alert("Please authenticate with Spotify first.");
+          return;
+        }
+
+        if (!uploadedCSVData || uploadedCSVData.length === 0) {
+          alert("Please upload a CSV file first.");
+          return;
+        }
+
+        // Clear previous results and reset filter
+        document.getElementById("artist-results").innerHTML = "";
+        document.getElementById("summary").style.display = "none";
+        allResults = [];
+        currentFilter = "all";
+
+        const artistsToCheck = uploadedCSVData;
+
+        showStatus(`Checking ${artistsToCheck.length} artists from CSV...`);
+
+        for (let i = 0; i < artistsToCheck.length; i++) {
+          showStatus(
+            `Checking artist ${i + 1}/${artistsToCheck.length}: ${
+              artistsToCheck[i]
+            }`
+          );
+
+          const result = await checkSingleArtist(
+            artistsToCheck[i],
+            accessToken
+          );
+          allResults.push(result);
+
+          // Display this single result immediately
+          displaySingleResult(result, "artist-results");
+
+          // Update summary with current results
+          updateSummary(allResults, []);
+
+          // Add delay to avoid rate limiting
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        // Final status update
+        showStatus(
+          `Completed checking ${artistsToCheck.length} artists from CSV`,
+          "success"
+        );
+        setTimeout(hideStatus, 3000);
       }
 
       // Search function for individual artists
