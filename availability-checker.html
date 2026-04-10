@@ -433,6 +433,10 @@
                 <span id="unavailable-count" class="stat-number">0</span>
                 <span class="stat-label">Not Available</span>
               </div>
+              <div class="stat" onclick="filterResults('uncertain')">
+                <span id="uncertain-count" class="stat-number">0</span>
+                <span class="stat-label">Uncertain Matches</span>
+              </div>
             </div>
           </div>
 
@@ -513,6 +517,9 @@
             break;
           case "not-available":
             filteredResults = allResults.filter((r) => r.notAvailable);
+            break;
+          case "uncertain":
+            filteredResults = allResults.filter((r) => r.found && r.exactMatch === false);
             break;
           default:
             filteredResults = allResults;
@@ -908,7 +915,8 @@
 
               // Try close match (normalized comparison)
               if (isCloseMatch(variation.term, artist.name)) {
-                artist.exactMatch = true; // Close enough to be confident
+                // Close match is good enough, but mark as uncertain if strings visibly differ
+                artist.exactMatch = (artist.name.toLowerCase().trim() === artistName.toLowerCase().trim());
                 return artist;
               }
             }
@@ -1118,6 +1126,9 @@
           case "not-available":
             shouldDisplay = result.notAvailable;
             break;
+          case "uncertain":
+            shouldDisplay = result.found && result.exactMatch === false;
+            break;
           default:
             shouldDisplay = true;
         }
@@ -1293,25 +1304,18 @@
       }
 
       function updateSummary(artistResults, labelResults) {
-        const totalArtists = artistResults.length + labelResults.length;
-        const fullyAvailableCount = [...artistResults, ...labelResults].filter(
-          (r) => r.fullyAvailable
-        ).length;
-        const partiallyAvailableCount = [
-          ...artistResults,
-          ...labelResults,
-        ].filter((r) => r.partiallyAvailable).length;
-        const unavailableCount = [...artistResults, ...labelResults].filter(
-          (r) => r.notAvailable
-        ).length;
+        const allData = [...artistResults, ...labelResults];
+        const totalArtists = allData.length;
+        const fullyAvailableCount = allData.filter((r) => r.fullyAvailable).length;
+        const partiallyAvailableCount = allData.filter((r) => r.partiallyAvailable).length;
+        const unavailableCount = allData.filter((r) => r.notAvailable).length;
+        const uncertainCount = allData.filter((r) => r.found && r.exactMatch === false).length;
 
         document.getElementById("total-artists").textContent = totalArtists;
-        document.getElementById("available-count").textContent =
-          fullyAvailableCount;
-        document.getElementById("partially-available-count").textContent =
-          partiallyAvailableCount;
-        document.getElementById("unavailable-count").textContent =
-          unavailableCount;
+        document.getElementById("available-count").textContent = fullyAvailableCount;
+        document.getElementById("partially-available-count").textContent = partiallyAvailableCount;
+        document.getElementById("unavailable-count").textContent = unavailableCount;
+        document.getElementById("uncertain-count").textContent = uncertainCount;
         document.getElementById("summary").style.display = "block";
       }
 
