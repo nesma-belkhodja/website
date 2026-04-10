@@ -272,6 +272,15 @@
         margin-left: 10px;
       }
 
+      .uncertain-match-badge {
+        background-color: #6c757d; /* Gray for uncertain */
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        margin-left: 10px;
+      }
+
       .summary {
         background: #28a745; /* Green background like buttons */
         color: white;
@@ -790,44 +799,94 @@
 
       // Spotify API functions
       async function searchSpotifyArtist(artistName, token) {
+        // Generate multiple search variations to improve accuracy
+        const searchVariations = [];
+
+        // Variation 1: Original name
+        searchVariations.push(artistName.trim());
+
+        // Variation 2: Remove parentheses and content (e.g., "Artist (Real Name)" -> "Artist")
+        const withoutParens = artistName.replace(/\s*\([^)]*\)/g, '').trim();
+        if (withoutParens && withoutParens !== artistName.trim()) {
+          searchVariations.push(withoutParens);
+        }
+
+        // Variation 3: Text before first parenthesis only
+        const beforeParens = artistName.split('(')[0].trim();
+        if (beforeParens && beforeParens !== artistName.trim() && beforeParens !== withoutParens) {
+          searchVariations.push(beforeParens);
+        }
+
+        // Try each search variation
+        for (const searchTerm of searchVariations) {
+          const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(
+            searchTerm
+          )}&type=artist&limit=10`; // Increased limit to 10 for better matching
+          const headers = { Authorization: `Bearer ${token}` };
+
+          try {
+            const response = await fetch(url, { headers });
+
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.artists.items.length === 0) {
+              continue; // Try next variation
+            }
+
+            // Normalize the search term for case-insensitive comparison
+            const normalizedSearchName = searchTerm.toLowerCase().trim();
+
+            // Check each result for a case-insensitive name match
+            for (const artist of data.artists.items) {
+              const normalizedArtistName = artist.name.toLowerCase().trim();
+
+              // If we find an exact case-insensitive match, return it
+              if (normalizedArtistName === normalizedSearchName) {
+                artist.exactMatch = true; // Mark as exact match
+                return artist;
+              }
+            }
+
+            // If no exact match in this variation, continue to next variation
+            // Don't return first result yet - try other variations first
+          } catch (error) {
+            console.error(`[ERROR] searching for artist ${searchTerm}:`, error, {
+              url,
+              searchTerm,
+            });
+            // Continue to next variation on error
+          }
+        }
+
+        // If no exact match found in any variation, try one more time with the best variation
+        // and return the first result (but this is less confident)
+        const bestSearchTerm = searchVariations[searchVariations.length > 1 ? 1 : 0];
         const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(
-          artistName
-        )}&type=artist&limit=4`; // Increased limit to 4
+          bestSearchTerm
+        )}&type=artist&limit=10`;
         const headers = { Authorization: `Bearer ${token}` };
 
         try {
           const response = await fetch(url, { headers });
-
           if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            return null;
           }
 
           const data = await response.json();
-
           if (data.artists.items.length === 0) {
             return null;
           }
 
-          // Normalize the search term for case-insensitive comparison
-          const normalizedSearchName = artistName.toLowerCase().trim();
-
-          // Check each result for a case-insensitive name match
-          for (const artist of data.artists.items) {
-            const normalizedArtistName = artist.name.toLowerCase().trim();
-
-            // If we find an exact case-insensitive match, return it
-            if (normalizedArtistName === normalizedSearchName) {
-              return artist;
-            }
-          }
-
-          // If no exact match found, return the first result (most relevant)
-          return data.artists.items[0];
+          // Return first result as fallback (less confident)
+          const fallbackArtist = data.artists.items[0];
+          fallbackArtist.exactMatch = false; // Mark as uncertain match
+          return fallbackArtist;
         } catch (error) {
-          console.error(`[ERROR] searching for artist ${artistName}:`, error, {
-            url,
-            artistName,
-          });
+          console.error(`[ERROR] final search attempt for ${artistName}:`, error);
           return null;
         }
       }
@@ -870,6 +929,7 @@
             albums: [],
             availableInRegion: false,
             partiallyAvailable: false,
+            exactMatch: false,
           };
         }
 
@@ -900,6 +960,7 @@
           partiallyAvailable: partiallyAvailable,
           fullyAvailable: fullyAvailable,
           notAvailable: notAvailable,
+          exactMatch: artist.exactMatch !== false, // Default to true if not set
         };
 
         return result;
@@ -1018,11 +1079,17 @@
             '<span class="unavailable-badge">✅ Not Available</span>';
         }
 
+        // Add uncertain match badge if not an exact match
+        let uncertainBadge = "";
+        if (result.found && result.exactMatch === false) {
+          uncertainBadge = '<span class="uncertain-match-badge">❓ Uncertain Match</span>';
+        }
+
         div.className = `artist-result ${cssClass}`;
 
         div.innerHTML = `
                   <div class="artist-name">
-                      ${result.name}${statusBadge}
+                      ${result.name}${statusBadge}${uncertainBadge}
                       ${
                         result.found && result.spotifyName !== result.name
                           ? ` (${result.spotifyName})`
@@ -1095,11 +1162,17 @@
               '<span class="unavailable-badge">✅ Not Available</span>';
           }
 
+          // Add uncertain match badge if not an exact match
+          let uncertainBadge = "";
+          if (result.found && result.exactMatch === false) {
+            uncertainBadge = '<span class="uncertain-match-badge">❓ Uncertain Match</span>';
+          }
+
           div.className = `artist-result ${cssClass}`;
 
           div.innerHTML = `
                     <div class="artist-name">
-                        ${result.name}${statusBadge}
+                        ${result.name}${statusBadge}${uncertainBadge}
                         ${
                           result.found && result.spotifyName !== result.name
                             ? ` (${result.spotifyName})`
