@@ -925,7 +925,15 @@
 
         // If no confident match found in any variation, try one more time with the best variation
         // and return the first result (but this is less confident)
-        const bestVariation = searchVariations[searchVariations.length > 1 ? 2 : 0]; // Prefer without parens
+        // Prefer without-parens variation if it exists, otherwise use first variation
+        const bestVariationIndex = Math.min(2, searchVariations.length - 1);
+        const bestVariation = searchVariations[bestVariationIndex];
+
+        if (!bestVariation) {
+          // No variations available, shouldn't happen but handle it
+          return null;
+        }
+
         const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(
           bestVariation.term
         )}&type=artist&limit=50`; // Maximum allowed by Spotify API
