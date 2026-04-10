@@ -797,31 +797,92 @@
         }
       }
 
+      // Helper function to normalize artist names for comparison
+      function normalizeArtistName(name) {
+        return name
+          .toLowerCase()
+          .trim()
+          // Remove special characters but keep alphanumeric and spaces
+          .replace(/[^\w\s]/g, '')
+          // Remove common separators and features
+          .replace(/\bfeat\b\.?|\bft\b\.?|\bvs\b\.?|\band\b|&/gi, '')
+          // Collapse multiple spaces
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
+      // Helper function to check if two artist names are similar enough
+      function isCloseMatch(searchName, spotifyName) {
+        const normalized1 = normalizeArtistName(searchName);
+        const normalized2 = normalizeArtistName(spotifyName);
+
+        // Exact match after normalization
+        if (normalized1 === normalized2) {
+          return true;
+        }
+
+        // One contains the other (handles "Artist" vs "Artist Band")
+        if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) {
+          return true;
+        }
+
+        // Very similar length and lots of overlap
+        const minLength = Math.min(normalized1.length, normalized2.length);
+        const maxLength = Math.max(normalized1.length, normalized2.length);
+
+        // If one is much shorter, don't consider it a match unless it's contained
+        if (minLength / maxLength < 0.6) {
+          return false;
+        }
+
+        // Check character overlap (simple similarity)
+        let matches = 0;
+        const shorter = normalized1.length < normalized2.length ? normalized1 : normalized2;
+        const longer = normalized1.length >= normalized2.length ? normalized1 : normalized2;
+
+        for (let i = 0; i < shorter.length; i++) {
+          if (longer.includes(shorter[i])) {
+            matches++;
+          }
+        }
+
+        // If 80%+ characters match, consider it close enough
+        return (matches / shorter.length) >= 0.8;
+      }
+
       // Spotify API functions
       async function searchSpotifyArtist(artistName, token) {
         // Generate multiple search variations to improve accuracy
         const searchVariations = [];
 
         // Variation 1: Original name
-        searchVariations.push(artistName.trim());
+        searchVariations.push({ term: artistName.trim(), quoted: false });
 
-        // Variation 2: Remove parentheses and content (e.g., "Artist (Real Name)" -> "Artist")
+        // Variation 2: Quoted search for exact phrase matching
+        searchVariations.push({ term: artistName.trim(), quoted: true });
+
+        // Variation 3: Remove parentheses and content (e.g., "Artist (Real Name)" -> "Artist")
         const withoutParens = artistName.replace(/\s*\([^)]*\)/g, '').trim();
         if (withoutParens && withoutParens !== artistName.trim()) {
-          searchVariations.push(withoutParens);
+          searchVariations.push({ term: withoutParens, quoted: false });
+          searchVariations.push({ term: withoutParens, quoted: true });
         }
 
-        // Variation 3: Text before first parenthesis only
+        // Variation 4: Text before first parenthesis only
         const beforeParens = artistName.split('(')[0].trim();
         if (beforeParens && beforeParens !== artistName.trim() && beforeParens !== withoutParens) {
-          searchVariations.push(beforeParens);
+          searchVariations.push({ term: beforeParens, quoted: false });
         }
 
         // Try each search variation
-        for (const searchTerm of searchVariations) {
+        for (const variation of searchVariations) {
+          const searchQuery = variation.quoted
+            ? `artist:"${variation.term}"`
+            : variation.term;
+
           const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(
-            searchTerm
-          )}&type=artist&limit=10`; // Increased limit to 10 for better matching
+            searchQuery
+          )}&type=artist&limit=10`;
           const headers = { Authorization: `Bearer ${token}` };
 
           try {
@@ -837,36 +898,36 @@
               continue; // Try next variation
             }
 
-            // Normalize the search term for case-insensitive comparison
-            const normalizedSearchName = searchTerm.toLowerCase().trim();
-
-            // Check each result for a case-insensitive name match
+            // Check each result for a match
             for (const artist of data.artists.items) {
-              const normalizedArtistName = artist.name.toLowerCase().trim();
+              // Try exact match first (case-insensitive)
+              if (artist.name.toLowerCase().trim() === variation.term.toLowerCase().trim()) {
+                artist.exactMatch = true;
+                return artist;
+              }
 
-              // If we find an exact case-insensitive match, return it
-              if (normalizedArtistName === normalizedSearchName) {
-                artist.exactMatch = true; // Mark as exact match
+              // Try close match (normalized comparison)
+              if (isCloseMatch(variation.term, artist.name)) {
+                artist.exactMatch = true; // Close enough to be confident
                 return artist;
               }
             }
 
-            // If no exact match in this variation, continue to next variation
-            // Don't return first result yet - try other variations first
+            // If no match in this variation, continue to next variation
           } catch (error) {
-            console.error(`[ERROR] searching for artist ${searchTerm}:`, error, {
-              url,
-              searchTerm,
+            console.error(`[ERROR] searching for artist ${variation.term}:`, error, {
+              url: `https://api.spotify.com/v1/search?q=${searchQuery}&type=artist`,
+              searchTerm: variation.term,
             });
             // Continue to next variation on error
           }
         }
 
-        // If no exact match found in any variation, try one more time with the best variation
+        // If no confident match found in any variation, try one more time with the best variation
         // and return the first result (but this is less confident)
-        const bestSearchTerm = searchVariations[searchVariations.length > 1 ? 1 : 0];
+        const bestVariation = searchVariations[searchVariations.length > 1 ? 2 : 0]; // Prefer without parens
         const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(
-          bestSearchTerm
+          bestVariation.term
         )}&type=artist&limit=10`;
         const headers = { Authorization: `Bearer ${token}` };
 
