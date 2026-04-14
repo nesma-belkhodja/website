@@ -153,6 +153,58 @@
         transform: none;
       }
 
+      /* Download button styles */
+      .download-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: 4px;
+        cursor: pointer;
+        border: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        background-color: #28a745;
+        color: white;
+      }
+
+      .download-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .download-btn-danger {
+        background-color: #dc3545;
+      }
+
+      .download-btn-danger:hover {
+        background-color: #c82333;
+      }
+
+      .download-btn-warning {
+        background-color: #ffc107;
+        color: #212529;
+      }
+
+      .download-btn-warning:hover {
+        background-color: #e0a800;
+      }
+
+      .download-btn-success {
+        background-color: #28a745;
+      }
+
+      .download-btn-success:hover {
+        background-color: #218838;
+      }
+
+      .download-btn-secondary {
+        background-color: #6c757d;
+      }
+
+      .download-btn-secondary:hover {
+        background-color: #5a6268;
+      }
+
       .status {
         text-align: center;
         margin: 20px 0;
@@ -438,6 +490,27 @@
                 <span class="stat-label">Uncertain Matches</span>
               </div>
             </div>
+
+            <div class="csv-download-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+              <h4 style="margin-bottom: 10px; color: #333;">Download Filtered Results as CSV</h4>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <button onclick="downloadFilteredCSV('all')" class="download-btn">
+                  <span style="margin-right: 5px;">⬇</span> All Artists
+                </button>
+                <button onclick="downloadFilteredCSV('fully-available')" class="download-btn download-btn-danger">
+                  <span style="margin-right: 5px;">⬇</span> Fully Available
+                </button>
+                <button onclick="downloadFilteredCSV('partially-available')" class="download-btn download-btn-warning">
+                  <span style="margin-right: 5px;">⬇</span> Partially Available
+                </button>
+                <button onclick="downloadFilteredCSV('not-available')" class="download-btn download-btn-success">
+                  <span style="margin-right: 5px;">⬇</span> Not Available
+                </button>
+                <button onclick="downloadFilteredCSV('uncertain')" class="download-btn download-btn-secondary">
+                  <span style="margin-right: 5px;">⬇</span> Uncertain Matches
+                </button>
+              </div>
+            </div>
           </div>
 
           <div id="artist-results"></div>
@@ -459,7 +532,9 @@
 
       let allResults = []; // Global variable to store all results for filtering
       let currentFilter = "all"; // Track current filter state
-      let uploadedCSVData = null; // Store parsed CSV data
+      let uploadedCSVData = null; // Store parsed CSV data (artist names only)
+      let originalCSVData = null; // Store full parsed CSV data (all columns)
+      let artistColumnIndex = -1; // Store the artist column index for matching
 
       // PKCE helper functions for Spotify authentication
       function generateRandomString(length) {
@@ -527,6 +602,108 @@
 
         // Display filtered results
         displayResults(filteredResults, "artist-results", "artist");
+      }
+
+      // CSV Download Functions
+      function downloadFilteredCSV(filterType) {
+        if (!originalCSVData || originalCSVData.length === 0) {
+          alert("No CSV data available. Please upload a CSV file first.");
+          return;
+        }
+
+        if (allResults.length === 0) {
+          alert("No results available. Please check artists first.");
+          return;
+        }
+
+        // Get filtered results based on filter type
+        let filteredResults = [];
+        switch (filterType) {
+          case "all":
+            filteredResults = allResults;
+            break;
+          case "fully-available":
+            filteredResults = allResults.filter((r) => r.fullyAvailable);
+            break;
+          case "partially-available":
+            filteredResults = allResults.filter((r) => r.partiallyAvailable);
+            break;
+          case "not-available":
+            filteredResults = allResults.filter((r) => r.notAvailable);
+            break;
+          case "uncertain":
+            filteredResults = allResults.filter((r) => r.found && r.exactMatch === false);
+            break;
+          default:
+            filteredResults = allResults;
+        }
+
+        if (filteredResults.length === 0) {
+          alert("No results match this filter.");
+          return;
+        }
+
+        // Create a set of artist names from filtered results for quick lookup
+        const filteredArtistNames = new Set(
+          filteredResults.map((r) => r.name.toLowerCase().trim())
+        );
+
+        // Filter original CSV rows that match the filtered artist names
+        const header = originalCSVData[0];
+        const filteredRows = [header]; // Start with header
+
+        for (let i = 1; i < originalCSVData.length; i++) {
+          const row = originalCSVData[i];
+          if (row.length > artistColumnIndex) {
+            const artistName = row[artistColumnIndex].trim().replace(/^["']|["']$/g, "").toLowerCase();
+            if (filteredArtistNames.has(artistName)) {
+              filteredRows.push(row);
+            }
+          }
+        }
+
+        // Convert filtered rows to CSV string
+        const csvContent = convertToCSV(filteredRows);
+
+        // Create filename based on filter type
+        const filterLabel = filterType === "all" ? "all" : filterType.replace("-", "_");
+        const filename = `artists_${filterLabel}_${new Date().toISOString().split('T')[0]}.csv`;
+
+        // Trigger download
+        downloadCSVFile(csvContent, filename);
+
+        showStatus(`Downloaded ${filteredRows.length - 1} row(s) as ${filename}`, "success");
+        setTimeout(hideStatus, 3000);
+      }
+
+      function convertToCSV(rows) {
+        return rows.map(row => {
+          return row.map(field => {
+            // Escape quotes and wrap in quotes if necessary
+            const fieldStr = String(field);
+            if (fieldStr.includes(',') || fieldStr.includes('"') || fieldStr.includes('\n')) {
+              return `"${fieldStr.replace(/"/g, '""')}"`;
+            }
+            return fieldStr;
+          }).join(',');
+        }).join('\n');
+      }
+
+      function downloadCSVFile(csvContent, filename) {
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Clean up the URL object
+        URL.revokeObjectURL(url);
       }
 
       // Token management functions
@@ -1329,6 +1506,8 @@
           fileNameDisplay.textContent = "";
           checkCSVBtn.disabled = true;
           uploadedCSVData = null;
+          originalCSVData = null;
+          artistColumnIndex = -1;
           return;
         }
 
@@ -1338,6 +1517,8 @@
           fileNameDisplay.textContent = "";
           checkCSVBtn.disabled = true;
           uploadedCSVData = null;
+          originalCSVData = null;
+          artistColumnIndex = -1;
           event.target.value = ""; // Clear the file input
           return;
         }
@@ -1360,10 +1541,13 @@
               );
               checkCSVBtn.disabled = true;
               uploadedCSVData = null;
+              originalCSVData = null;
+              artistColumnIndex = -1;
               return;
             }
 
             uploadedCSVData = artistNames;
+            originalCSVData = parsedData; // Store full CSV data
             checkCSVBtn.disabled = false;
             showStatus(
               `CSV loaded successfully. Found ${artistNames.length} unique artist(s).`,
@@ -1374,6 +1558,8 @@
             showStatus(`Error parsing CSV: ${error.message}`, "error");
             checkCSVBtn.disabled = true;
             uploadedCSVData = null;
+            originalCSVData = null;
+            artistColumnIndex = -1;
           }
         };
 
@@ -1381,6 +1567,8 @@
           showStatus("Error reading file.", "error");
           checkCSVBtn.disabled = true;
           uploadedCSVData = null;
+          originalCSVData = null;
+          artistColumnIndex = -1;
         };
 
         reader.readAsText(file);
@@ -1427,7 +1615,7 @@
 
         // First row is the header
         const header = parsedData[0];
-        let artistColumnIndex = -1;
+        let columnIndex = -1;
 
         // Try to find the "Artist / Label name" column
         for (let i = 0; i < header.length; i++) {
@@ -1436,26 +1624,29 @@
             columnName.includes("artist") &&
             (columnName.includes("label") || columnName.includes("name"))
           ) {
-            artistColumnIndex = i;
+            columnIndex = i;
             break;
           }
         }
 
         // If not found by name, try column 7 (index 6) as specified
-        if (artistColumnIndex === -1 && header.length >= 7) {
-          artistColumnIndex = 6;
+        if (columnIndex === -1 && header.length >= 7) {
+          columnIndex = 6;
         }
 
-        if (artistColumnIndex === -1) {
+        if (columnIndex === -1) {
           throw new Error('Could not find "Artist / Label name" column');
         }
+
+        // Store the column index globally for later matching
+        artistColumnIndex = columnIndex;
 
         // Extract artist names from the data rows
         const artistNames = [];
         for (let i = 1; i < parsedData.length; i++) {
           const row = parsedData[i];
-          if (row.length > artistColumnIndex) {
-            const artistName = row[artistColumnIndex].trim();
+          if (row.length > columnIndex) {
+            const artistName = row[columnIndex].trim();
             // Remove any surrounding quotes
             const cleanName = artistName.replace(/^["']|["']$/g, "");
             if (cleanName) {
