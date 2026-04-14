@@ -669,7 +669,7 @@ strong, b {
     gap: 1rem;
 }
 
-.export-btn, .logout-btn {
+.export-btn, .admin-back-btn {
     padding: 0.8rem 1.5rem;
     border: 3px solid;
     font-weight: 400;
@@ -679,6 +679,8 @@ strong, b {
     letter-spacing: 0.05rem;
     font-family: 'Inversionz', 'Righteous', sans-serif;
     font-size: 1.2rem;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .export-btn {
@@ -687,7 +689,7 @@ strong, b {
     border-color: #00FF00;
 }
 
-.logout-btn {
+.admin-back-btn {
     background: #FF00FF;
     color: #000000;
     border-color: #FF00FF;
@@ -699,7 +701,7 @@ strong, b {
     box-shadow: 0 0 20px #00FF00;
 }
 
-.logout-btn:hover {
+.admin-back-btn:hover {
     background: #000000;
     color: #FF00FF;
     box-shadow: 0 0 20px #FF00FF;
@@ -969,6 +971,56 @@ strong, b {
         font-size: 1.4rem;
         padding: 0.9rem 1.8rem;
     }
+
+    .admin-container {
+        padding: 1rem;
+    }
+
+    .admin-dashboard {
+        padding: 1rem;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .dashboard-header h2 {
+        font-size: 2.2rem;
+    }
+
+    .dashboard-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .export-btn, .admin-back-btn {
+        width: 100%;
+        text-align: center;
+        font-size: 1.3rem;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card h3 {
+        font-size: 2.5rem;
+    }
+
+    .stat-card p {
+        font-size: 1.3rem;
+    }
+
+    .rsvp-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .rsvp-table {
+        min-width: 600px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1159,6 +1211,45 @@ strong, b {
         font-size: 1.3rem;
         padding: 0.85rem 1.7rem;
     }
+
+    .admin-container {
+        padding: 0.75rem;
+    }
+
+    .admin-dashboard {
+        padding: 0.75rem;
+    }
+
+    .dashboard-header h2 {
+        font-size: 2rem;
+    }
+
+    .export-btn, .admin-back-btn {
+        font-size: 1.25rem;
+        padding: 0.7rem 1.3rem;
+    }
+
+    .stat-card h3 {
+        font-size: 2.2rem;
+    }
+
+    .stat-card p {
+        font-size: 1.2rem;
+    }
+
+    .rsvp-table th,
+    .rsvp-table td {
+        font-size: 1.1rem;
+        padding: 0.8rem 0.5rem;
+    }
+
+    .rsvp-table {
+        min-width: 600px;
+    }
+
+    .rsvp-table-container {
+        -webkit-overflow-scrolling: touch;
+    }
 }
 
 @media (max-width: 375px) {
@@ -1327,6 +1418,55 @@ strong, b {
         padding: 0.8rem 1.6rem;
         letter-spacing: 0.05rem;
     }
+
+    .admin-container {
+        padding: 0.5rem;
+    }
+
+    .admin-dashboard {
+        padding: 0.5rem;
+    }
+
+    .dashboard-header h2 {
+        font-size: 1.8rem;
+    }
+
+    .export-btn, .admin-back-btn {
+        font-size: 1.15rem;
+        padding: 0.6rem 1.2rem;
+    }
+
+    .stat-card {
+        padding: 1.5rem;
+    }
+
+    .stat-card h3 {
+        font-size: 2rem;
+    }
+
+    .stat-card p {
+        font-size: 1.1rem;
+    }
+
+    .rsvp-table th,
+    .rsvp-table td {
+        font-size: 1rem;
+        padding: 0.7rem 0.4rem;
+    }
+
+    .search-bar input {
+        font-size: 1.1rem;
+        padding: 0.8rem;
+    }
+
+    .rsvp-table {
+        min-width: 600px;
+    }
+
+    .rsvp-table-container {
+        -webkit-overflow-scrolling: touch;
+        padding: 0.5rem;
+    }
 }
 
 /* Delete Button Styles */
@@ -1340,8 +1480,18 @@ strong, b {
     font-family: 'Inversionz', 'Righteous', sans-serif;
     font-size: 1.2rem;
     transition: background-color 0.3s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .delete-btn:hover {
     background-color: #c82333;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .delete-btn:active {
+        background-color: #c82333;
+        transform: scale(0.95);
+    }
 }

@@ -1,43 +1,40 @@
-// Admin Dashboard Management
+// Admin Dashboard Management with Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-database.js";
+
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyD9N3RZuDSfey1Cbe0I6K6ATB3gFYmUqhw",
+    authDomain: "soiregg.firebaseapp.com",
+    databaseURL: "https://soiregg-default-rtdb.firebaseio.com",
+    projectId: "soiregg",
+    storageBucket: "soiregg.firebasestorage.app",
+    messagingSenderId: "654566555389",
+    appId: "1:654566555389:web:4177b274634d1b7c7d4894"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('login-form');
     const loginSection = document.getElementById('login-section');
     const dashboardSection = document.getElementById('dashboard-section');
     const loginError = document.getElementById('login-error');
-    const logoutBtn = document.getElementById('logout-btn');
     const exportBtn = document.getElementById('export-btn');
     const searchInput = document.getElementById('search-input');
 
     let allRsvps = [];
     let filteredRsvps = [];
 
-    // Check if already logged in
-    if (sessionStorage.getItem('adminLoggedIn') === 'true') {
-        showDashboard();
-    }
+    // Auto-login (no password required)
+    showDashboard();
 
-    // Login form submission
+    // Login form submission (disabled - no password required)
     loginForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        const password = document.getElementById('password').value;
-
-        // Check password (the actual password check will be done via Netlify Identity or environment variable)
-        // For now, we'll use a simple check - you'll replace this with proper auth
-        if (password === 'admin123') { // CHANGE THIS PASSWORD!
-            sessionStorage.setItem('adminLoggedIn', 'true');
-            showDashboard();
-        } else {
-            loginError.textContent = 'Incorrect password';
-        }
-    });
-
-    // Logout
-    logoutBtn.addEventListener('click', function() {
-        sessionStorage.removeItem('adminLoggedIn');
-        dashboardSection.style.display = 'none';
-        loginSection.style.display = 'block';
-        loginError.textContent = '';
-        document.getElementById('password').value = '';
+        showDashboard();
     });
 
     // Show dashboard
@@ -47,59 +44,36 @@ document.addEventListener('DOMContentLoaded', function() {
         loadRsvps();
     }
 
-    // Load RSVPs from Netlify Forms API
-    async function loadRsvps() {
-        try {
-            // Note: This requires Netlify Identity or a serverless function to access the Forms API
-            // For demo purposes, we'll use localStorage for testing
+    // Load RSVPs from Firebase
+    function loadRsvps() {
+        const rsvpRef = ref(database, "rsvps");
+        onValue(rsvpRef, (snapshot) => {
+            const rsvps = snapshot.val();
 
-            // In production, you would use:
-            // const response = await fetch('/.netlify/functions/get-submissions');
-            // const data = await response.json();
-            // allRsvps = data;
-
-            // For local testing, use localStorage
-            const stored = localStorage.getItem('rsvps');
-            allRsvps = stored ? JSON.parse(stored) : generateDemoData();
+            if (!rsvps) {
+                allRsvps = [];
+            } else {
+                // Convert Firebase object to array with IDs
+                allRsvps = Object.entries(rsvps).map(([id, data]) => ({
+                    id,
+                    ...data
+                }));
+            }
 
             filteredRsvps = [...allRsvps];
             updateStats();
             displayRsvps(filteredRsvps);
-        } catch (error) {
+        }, (error) => {
             console.error('Error loading RSVPs:', error);
             document.getElementById('rsvp-table-body').innerHTML =
-                '<tr><td colspan="7" class="no-data">Error loading RSVPs</td></tr>';
-        }
-    }
-
-    // Generate demo data for testing
-    function generateDemoData() {
-        return [
-            {
-                date: new Date().toISOString(),
-                name: 'John Doe',
-                email: 'john@example.com',
-                phone: '555-0123',
-                guests: '2',
-                dietary: 'Vegetarian',
-                comments: 'Looking forward to it!'
-            },
-            {
-                date: new Date().toISOString(),
-                name: 'Jane Smith',
-                email: 'jane@example.com',
-                phone: '555-0124',
-                guests: '1',
-                dietary: '',
-                comments: ''
-            }
-        ];
+                '<tr><td colspan="5" class="no-data">Error loading RSVPs</td></tr>';
+        });
     }
 
     // Update statistics
     function updateStats() {
         const totalRsvps = allRsvps.length;
-        const totalGuests = allRsvps.reduce((sum, rsvp) => sum + parseInt(rsvp.guests || 1), 0);
+        const totalGuests = allRsvps.length; // Each RSVP is 1 guest
 
         document.getElementById('total-rsvps').textContent = totalRsvps;
         document.getElementById('total-guests').textContent = totalGuests;
@@ -110,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const tbody = document.getElementById('rsvp-table-body');
 
         if (rsvps.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="no-data">No RSVPs yet</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="no-data">No RSVPs yet</td></tr>';
             return;
         }
 
@@ -118,21 +92,36 @@ document.addEventListener('DOMContentLoaded', function() {
             <tr>
                 <td>${formatDate(rsvp.date)}</td>
                 <td>${escapeHtml(rsvp.name)}</td>
-                <td>${escapeHtml(rsvp.email)}</td>
                 <td>${escapeHtml(rsvp.phone || '-')}</td>
-                <td>${escapeHtml(rsvp.guests)}</td>
-                <td>${escapeHtml(rsvp.dietary || '-')}</td>
-                <td>${escapeHtml(rsvp.comments || '-')}</td>
+                <td>${escapeHtml(rsvp.note || '-')}</td>
+                <td>
+                    <button class="delete-btn" onclick="window.deleteRSVP('${rsvp.id}')">Delete</button>
+                </td>
             </tr>
         `).join('');
     }
+
+    // Delete RSVP function (exposed globally)
+    window.deleteRSVP = function(id) {
+        if (confirm('Are you sure you want to delete this RSVP?')) {
+            const rsvpRef = ref(database, `rsvps/${id}`);
+            remove(rsvpRef)
+                .then(() => {
+                    console.log('RSVP deleted successfully');
+                })
+                .catch((error) => {
+                    console.error('Error deleting RSVP:', error);
+                    alert('Error deleting RSVP. Please try again.');
+                });
+        }
+    };
 
     // Search functionality
     searchInput.addEventListener('input', function(e) {
         const searchTerm = e.target.value.toLowerCase();
         filteredRsvps = allRsvps.filter(rsvp =>
             rsvp.name.toLowerCase().includes(searchTerm) ||
-            rsvp.email.toLowerCase().includes(searchTerm)
+            (rsvp.phone && rsvp.phone.toLowerCase().includes(searchTerm))
         );
         displayRsvps(filteredRsvps);
     });
@@ -145,15 +134,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Convert RSVPs to CSV
     function convertToCSV(data) {
-        const headers = ['Date', 'Name', 'Email', 'Phone', 'Guests', 'Dietary Restrictions', 'Comments'];
+        const headers = ['Date', 'Name', 'Phone', 'Note'];
         const rows = data.map(rsvp => [
             formatDate(rsvp.date),
             rsvp.name,
-            rsvp.email,
             rsvp.phone || '',
-            rsvp.guests,
-            rsvp.dietary || '',
-            rsvp.comments || ''
+            rsvp.note || ''
         ]);
 
         const csvContent = [
