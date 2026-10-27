@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Burn a CD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Archivo+Black&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  @font-face { font-family: "Nineties Headliner"; src: url("NinetiesHeadliner-Regular.otf"); }
+  :root { --black: #0b0b0b; --white: #f4f3ee; --red: #ee2a35; --green: #009736; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--black); color: var(--white);
+         font: 400 14px/1.45 "Space Mono", ui-monospace, monospace; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 40px 20px 56px; }
+  main { display: grid; grid-template-columns: 360px 1fr; gap: 48px; align-items: start; }
+  h1 { font: 400 clamp(44px, 7vw, 78px)/.88 "Archivo Black", sans-serif; text-transform: uppercase;
+       letter-spacing: -0.03em; margin: 0 0 28px; }
+  h1 em { font-style: normal; color: var(--red); }
+  form { display: flex; flex-direction: column; gap: 24px; }
+  .step { display: flex; flex-direction: column; gap: 10px; }
+  .step > span { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 12px;
+                 letter-spacing: .14em; text-transform: uppercase; }
+  .step > span b { color: var(--red); font-size: 16px; }
+  input[type=text] { width: 100%; background: var(--white); border: 0; border-left: 10px solid var(--green); color: var(--black);
+                     padding: 14px; font: 700 18px "Space Mono", monospace; outline: none; border-radius: 0; }
+  input[type=text]:focus { border-left-color: var(--red); }
+  .drop { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer;
+          border: 2px dashed var(--white); padding: 14px; }
+  .drop:hover { border-color: var(--red); background: rgba(238,42,53,.1); }
+  .drop em { font-style: normal; color: #9a998f; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .drop strong { background: var(--white); color: var(--black); padding: 6px 12px; font-size: 12px; letter-spacing: .08em;
+                 text-transform: uppercase; white-space: nowrap; }
+  .drop input { display: none; }
+  #swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+  #swatches button { width: 44px; height: 44px; padding: 0; border: 2px solid var(--white); border-radius: 0; cursor: pointer; }
+  #swatches button.active { outline: 3px solid var(--red); outline-offset: 3px; }
+  input[type=color] { width: 100%; height: 40px; padding: 3px; background: var(--white); border: 0; border-radius: 0; cursor: pointer; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .actions button { border: 0; padding: 18px 12px; border-radius: 0; color: var(--black); cursor: pointer;
+                    font: 400 18px "Archivo Black", sans-serif; text-transform: uppercase; letter-spacing: .02em;
+                    box-shadow: 6px 6px 0 var(--green); transition: transform .1s, box-shadow .1s; }
+  .actions button:hover { transform: translate(3px, 3px); box-shadow: 3px 3px 0 var(--green); }
+  #share { background: var(--red); }
+  #download { background: var(--white); }
+  #status { margin: -8px 0 0; min-height: 1.4em; font-size: 12px; color: #9a998f; }
+  /* header modeled on nomusicforgenocide.org: green bar, logo + wordmark, no menu */
+  .site-header { position: sticky; top: 0; z-index: 10; background: #3b8a1a; color: #000;
+                 padding: .7rem 1rem .7rem 3rem; }
+  .site-header a { display: flex; width: fit-content; align-items: center; gap: .6rem; color: inherit; text-decoration: none;
+                   font: 400 14px/1.1 "Nineties Headliner", sans-serif; text-transform: uppercase;
+                   -webkit-text-stroke: .5px #3b8a1a; letter-spacing: -0.04em; }
+  .site-header img { height: 2.2rem; width: auto; display: block; transform: translateY(3px); }
+  @media (max-width: 800px) { .site-header { padding: .6rem 1rem; } .site-header a { margin: 0 auto; } .site-header img { height: 1.9rem; transform: translateY(2px); } .site-header a { font-size: 13px; } }
+  .stage { display: flex; justify-content: center; padding-right: 12px; }
+  canvas { width: min(100%, 560px); height: auto; box-shadow: 0 0 0 2px var(--white), 12px 12px 0 var(--shadow, var(--green)); }
+  @media (max-width: 800px) {
+    .wrap { padding: 16px 16px 32px; }
+    main { grid-template-columns: 1fr; gap: 24px; }
+    h1 { font-size: 30px; margin: 0 0 14px; line-height: 1.1; letter-spacing: -0.01em; word-spacing: .08em; }
+    h1 br { display: none; }
+    form { gap: 12px; }
+    .step { gap: 6px; }
+    .step > span { font-size: 11px; }
+    input[type=text] { padding: 10px 12px; font-size: 16px; }
+    .drop { padding: 9px 12px; }
+    #swatches { gap: 8px; }
+    body { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+    #swatches button { width: 40px; height: 40px; }
+    input[type=color] { height: 36px; }
+    /* action bar pinned to the bottom so Share/Download are always in reach */
+    .actions { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; gap: 10px; background: var(--black);
+               border-top: 2px solid var(--white); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }
+    .actions button { padding: 14px 8px; font-size: 15px; box-shadow: 3px 3px 0 var(--green); touch-action: manipulation; }
+    #status { position: fixed; left: 16px; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 20;
+              margin: 0; padding: 8px 10px; background: var(--white); color: var(--black); font-size: 12px; }
+    #status:empty { display: none; }
+    .stage { padding-right: 8px; }
+    canvas { box-shadow: 0 0 0 2px var(--white), 8px 8px 0 var(--shadow, var(--green)); }
+  }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a href="#top"><img src="nmfg2.png" alt=""><span>No Music for Genocide</span></a>
+</header>
+<div class="wrap">
+  <main>
+    <div>
+      <h1>Press <br>your <em>own</em> <br>disc</h1>
+      <form id="controls" onsubmit="return false">
+        <label class="step"><span><b>01</b> Artist name</span>
+          <input type="text" id="name" value="Artist Name" autocomplete="off">
+        </label>
+        <label class="step"><span><b>02</b> Album image</span>
+          <div class="drop"><em id="fname">Choose an image</em><strong>Browse</strong>
+            <input type="file" id="art" accept="image/*"></div>
+        </label>
+        <div class="step"><span><b>03</b> Background</span>
+          <div id="swatches"></div>
+          <input type="color" id="bgcustom" value="#0b0b0b" aria-label="Custom background color">
+        </div>
+        <div class="actions">
+          <button id="share">Share &uarr;</button>
+          <button id="download">Save &darr;</button>
+        </div>
+        <p id="status" role="status"></p>
+      </form>
+    </div>
+    <div class="stage"><canvas id="c" width="2160" height="2700"></canvas></div>
+  </main>
+</div>
+
+<script>
+// Geometry in overlay pixel space (2160x2700)
+const DISC = { x: 1120, y: 1250, r: 725, hubR: 123 };
+const SPINE = { x: 258, top: 615, bottom: 2025, size: 94, spacing: 0.08, color: "#4a4a4a",
+                font: "Gochi Hand" };
+
+// Poster text: cap top/bottom and left/right extents measured from the original poster
+const POSTER_FONT = "Nineties Headliner";
+const POSTER_LINES = [
+  { text: "1,000+ MUSICIANS & LABELS LAUNCH CULTURAL BOYCOTT", top: 205, bottom: 266, x0: 168, x1: 2000 },
+  { text: "AGAINST APARTHEID, OCCUPATION AND GENOCIDE OF PALESTINIANS.", top: 296, bottom: 349, x0: 168, x1: 2000 },
+  { text: "REJECT ART-WASHING & THE MUSIC INDUSTRY’S COMPLICITY.", top: 2167, bottom: 2224, x0: 168, x1: 2000 },
+  { text: "JOIN THE GLOBAL MOVEMENT BY REMOVING YOUR MUSIC FROM ISRAEL.", top: 2257, bottom: 2308, x0: 168, x1: 2000 },
+  { text: "NOMUSICFORGENOCIDE.ORG", top: 2513, bottom: 2568, x0: 720, x1: 1470 },
+];
+
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+const nameInput = document.getElementById("name");
+const overlay = new Image();
+let art = null;
+
+const BG_PRESETS = ["#0b0b0b", "#f4f3ee", "#ee2a35", "#009736"];
+let bgColor = BG_PRESETS[0];
+const swatches = document.getElementById("swatches");
+const bgCustom = document.getElementById("bgcustom");
+
+function setBg(color) {
+  bgColor = color;
+  bgCustom.value = color;
+  swatches.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.color === color));
+  render();
+}
+BG_PRESETS.forEach(color => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.dataset.color = color;
+  b.style.background = color;
+  b.title = color;
+  b.addEventListener("click", () => setBg(color));
+  swatches.appendChild(b);
+});
+bgCustom.addEventListener("input", () => setBg(bgCustom.value));
+
+function drawDisc() {
+  // Opaque base so the background color can't show through the translucent overlay
+  ctx.fillStyle = "#222";
+  ctx.beginPath();
+  ctx.arc(DISC.x, DISC.y, DISC.r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(DISC.x, DISC.y, DISC.r, 0, Math.PI * 2);
+  ctx.arc(DISC.x, DISC.y, DISC.hubR, 0, Math.PI * 2, true);
+  ctx.clip("evenodd");
+  if (art) {
+    const s = Math.min(art.width, art.height);
+    ctx.drawImage(art, (art.width - s) / 2, (art.height - s) / 2, s, s,
+                  DISC.x - DISC.r, DISC.y - DISC.r, DISC.r * 2, DISC.r * 2);
+  } else {
+    ctx.fillStyle = "#2a2a2a";
+    ctx.fillRect(DISC.x - DISC.r, DISC.y - DISC.r, DISC.r * 2, DISC.r * 2);
+  }
+  ctx.restore();
+}
+
+function drawSpine() {
+  const text = nameInput.value.trim().toUpperCase();
+  if (!text) return;
+  const maxLen = SPINE.bottom - SPINE.top;
+  const setFont = size => {
+    ctx.font = `${size}px "${SPINE.font}"`;
+    ctx.letterSpacing = `${size * SPINE.spacing}px`;
+  };
+  let size = SPINE.size;
+  setFont(size);
+  const w = ctx.measureText(text).width;
+  if (w > maxLen) { size *= maxLen / w; setFont(size); }
+  ctx.save();
+  ctx.translate(SPINE.x, (SPINE.top + SPINE.bottom) / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = SPINE.color;
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "center";
+  ctx.fillText(text, 0, 0);
+  ctx.restore();
+}
+
+function isLight(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const lum = 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
+  return lum > 150;
+}
+
+function drawPosterText() {
+  ctx.save();
+  ctx.fillStyle = isLight(bgColor) || bgColor === "#ee2a35" || bgColor === "#009736" ? "#151515" : "#e9e6dc";
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
+  ctx.font = `100px "${POSTER_FONT}"`;
+  const capRatio = ctx.measureText("H").actualBoundingBoxAscent / 100;
+  for (const l of POSTER_LINES) {
+    const size = (l.bottom - l.top) / capRatio;
+    ctx.font = `${size}px "${POSTER_FONT}"`;
+    const w = ctx.measureText(l.text).width;
+    ctx.save();
+    ctx.translate(l.x0, l.bottom);
+    ctx.scale((l.x1 - l.x0) / w, 1);
+    ctx.fillText(l.text, 0, 0);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function render() {
+  // red shadow only on the green background, green everywhere else
+  canvas.style.setProperty("--shadow", bgColor === "#009736" ? "#ee2a35" : "#009736");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawDisc();
+  ctx.drawImage(overlay, 0, 0);
+  drawSpine();
+  drawPosterText();
+  scheduleBlob();
+}
+
+document.getElementById("art").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById("fname").textContent = file.name;
+  const img = new Image();
+  img.onload = () => { art = img; render(); };
+  img.src = URL.createObjectURL(file);
+});
+nameInput.addEventListener("input", render);
+
+// Keep a ready-made PNG so Share can run straight from the tap (browsers require a fresh user gesture)
+let readyBlob = null, blobTimer = null;
+function scheduleBlob() {
+  readyBlob = null;
+  clearTimeout(blobTimer);
+  blobTimer = setTimeout(() => canvas.toBlob(b => { readyBlob = b; }, "image/png"), 250);
+}
+const getBlob = () => readyBlob ? Promise.resolve(readyBlob) : new Promise(res => canvas.toBlob(res, "image/png"));
+const fileName = () => (nameInput.value.trim() || "cd").replace(/\s+/g, "-") + ".png";
+const statusEl = document.getElementById("status");
+let statusTimer;
+function say(msg) {
+  statusEl.textContent = msg;
+  clearTimeout(statusTimer);
+  statusTimer = setTimeout(() => { statusEl.textContent = ""; }, 6000);
+}
+
+async function save() {
+  const blob = await getBlob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName();
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+document.getElementById("download").addEventListener("click", save);
+
+document.getElementById("share").addEventListener("click", async () => {
+  const blob = await getBlob();
+  const file = new File([blob], fileName(), { type: "image/png" });
+  const text = nameInput.value.trim();
+  // Mobile: native share sheet (Instagram, X, Messages, etc.) with the image attached
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], text });
+    } catch (err) {
+      if (err.name !== "AbortError") say("Couldn't open the share sheet. Try Save instead.");
+    }
+    return;
+  }
+  // Desktop fallback: save the image, then open X with the text so it can be attached
+  await save();
+  window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(text), "_blank", "noopener");
+  say("Image saved. Attach it to your post.");
+});
+
+swatches.firstChild.classList.add("active");
+overlay.onload = () => Promise.all([
+  document.fonts.load(`${SPINE.size}px "${SPINE.font}"`),
+  document.fonts.load(`100px "${POSTER_FONT}"`),
+]).then(render);
+overlay.src = "NMFG_Slide1_V4-2.png";
+</script>
+</body>
+</html>
